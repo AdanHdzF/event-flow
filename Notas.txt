@@ -1,0 +1,23 @@
+
+----------------------------------------------------------------------------
+
+Dockerfile
+
+docker build -t eventflow .
+
+docker run -it eventflow
+
+
+
+
+
+----------------------------------------------------------------------------
+
+docker-compose up
+
+
+docker-compose up --remove-orphans
+
+http://localhost:15672
+
+
