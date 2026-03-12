@@ -41,6 +41,12 @@ public class InMemoryEventBus implements EventBus {
 		}
 	}
 
+	@Override
+	public void publish(String topic, Object event, String partitionKey) {
+		// Partition key is ignored in in-memory implementation
+		publish(topic, event);
+	}
+
 	@SuppressWarnings("unchecked")
 	private void deliverToSubscriber(String json, Subscription sub) {
 		Object deserialized = serializer.deserialize(json, (Class<Object>) sub.eventType);

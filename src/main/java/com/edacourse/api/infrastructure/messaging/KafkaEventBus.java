@@ -32,18 +32,32 @@ public class KafkaEventBus implements EventBus {
 		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 		props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, "30000");
 
+		props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+		props.put(ProducerConfig.ACKS_CONFIG, "all");
+
 		this.producer = new KafkaProducer<>(props);
 		System.out.println("KafkaEventBus inicializado");
 	}
 
 	@Override
 	public void publish(String topic, Object event) {
+		publish(topic, event, null);
+	}
+
+	@Override
+	public void publish(String topic, Object event, String partitionKey) {
 		String json = serializer.serialize(event);
-		ProducerRecord<String, String> record = new ProducerRecord<>(topic, json);
-		producer.send(record);
+		ProducerRecord<String, String> record = new ProducerRecord<>(topic, partitionKey, json);
+		producer.send(record, (metadata, exception) -> {
+			if (exception != null) {
+				System.err.println("Error publicando evento en Kafka: " + exception.getMessage());
+			} else {
+				System.out.println("Publicado evento en topic " + topic + " con KafkaEventBus: " + event
+						+ ", partition: " + metadata.partition() + ", offset: " + metadata.offset());
+			}
+		});
 		producer.flush();
 
-		System.out.println("Publicado evento en topic " + topic + " con KafkaEventBus: " + event);
 	}
 
 	@Override

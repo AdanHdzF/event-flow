@@ -1,5 +1,9 @@
-package com.edacourse.api.infrastructure.messaging;
+package com.edacourse.api.subscriber;
 
+import com.edacourse.api.domain.event.OrderCancelledEvent;
+import com.edacourse.api.domain.event.OrderCreatedEvent;
+import com.edacourse.api.infrastructure.messaging.EventBus;
+import com.edacourse.api.infrastructure.messaging.EventSerializer;
 import com.edacourse.api.resource.OrderSseResource;
 
 public class SseBridgeSubscriber {

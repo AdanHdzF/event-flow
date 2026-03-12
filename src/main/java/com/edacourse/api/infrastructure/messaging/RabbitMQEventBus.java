@@ -63,6 +63,13 @@ public class RabbitMQEventBus implements EventBus {
 	}
 
 	@Override
+	public void publish(String topic, Object event, String partitionKey) {
+		// TODO: RabbitMQ no tiene particiones, pero podríamos usar el partitionKey para
+		// enrutar a diferentes colas si es necesario
+		publish(topic, event);
+	}
+
+	@Override
 	public <T> void subscribe(String topic, Class<T> eventType, EventHandler<T> handler) {
 		try {
 			channel.exchangeDeclare(topic, "fanout", true);

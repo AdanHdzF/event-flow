@@ -5,9 +5,9 @@ import java.util.List;
 // import com.edacourse.api.PromotionService;
 import com.edacourse.api.domain.Order;
 import com.edacourse.api.domain.Order.Status;
+import com.edacourse.api.domain.event.OrderCreatedEvent;
 import com.edacourse.api.dto.CreateOrderRequest;
 import com.edacourse.api.infrastructure.messaging.EventBus;
-import com.edacourse.api.infrastructure.messaging.OrderCreatedEvent;
 import com.edacourse.api.repository.OrderRepository;
 
 import jakarta.inject.Inject;
@@ -37,10 +37,12 @@ public class OrderService {
 		// promotionService.applyPromotion(dto.getPrice());
 		// notificationService.notify("Nueva orden creada: " + orderDetails);
 
-		Order order = new Order(dto.getProduct(), dto.getPrice(), dto.getQuantity());
+		Order order = new Order(dto.getCustomerId(), dto.getProduct(), dto.getPrice(), dto.getQuantity());
 		orderRepository.save(order);
 
-		eventBus.publish("orders.created", new OrderCreatedEvent(order.getProduct(), order.getPrice()));
+		eventBus.publish("orders.created",
+				new OrderCreatedEvent(order.getCustomerId(), order.getProduct(), order.getPrice(), order.getQuantity()),
+				order.getCustomerId());
 
 		return order;
 	}

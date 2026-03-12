@@ -25,6 +25,12 @@ public class InMemoryEventBusTonio implements EventBus {
 	}
 
 	@Override
+	public void publish(String topic, Object event, String partitionKey) {
+		// Partition key is ignored in in-memory implementation
+		publish(topic, event);
+	}
+
+	@Override
 	public <T> void subscribe(String topic, Class<T> eventType, EventHandler<T> handler) {
 		subscriptions.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>())
 				.add(json -> {

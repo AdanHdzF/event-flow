@@ -9,6 +9,7 @@ public class Order {
 	}
 
 	private final String id;
+	private final String customerId;
 	private final String product;
 	private final double price;
 	private final int quantity;
@@ -17,8 +18,9 @@ public class Order {
 	private Instant cancelledAt;
 	private String cancelReason;
 
-	public Order(String product, double price, int quantity) {
+	public Order(String customerId, String product, double price, int quantity) {
 		this.id = UUID.randomUUID().toString().substring(0, 8);
+		this.customerId = customerId;
 		this.product = product;
 		this.price = price;
 		this.quantity = quantity;
@@ -39,6 +41,10 @@ public class Order {
 
 	public String getId() {
 		return id;
+	}
+
+	public String getCustomerId() {
+		return customerId;
 	}
 
 	public String getProduct() {

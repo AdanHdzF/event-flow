@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class OrderResponse {
 	private final String id;
+	private final String customerId;
 	private final String product;
 	private final double price;
 	private final int quantity;
@@ -16,11 +17,13 @@ public class OrderResponse {
 	@JsonCreator
 	public OrderResponse(
 			@JsonProperty("id") String id,
+			@JsonProperty("customer_id") String customerId,
 			@JsonProperty("product") String product,
 			@JsonProperty("price") double price,
 			@JsonProperty("quantity") int quantity,
 			@JsonProperty("created_at") Instant createdAt) {
 		this.id = id;
+		this.customerId = customerId;
 		this.product = product;
 		this.price = price;
 		this.quantity = quantity;
@@ -30,6 +33,7 @@ public class OrderResponse {
 	public static OrderResponse from(Order order) {
 		return new OrderResponse(
 				order.getId(),
+				order.getCustomerId(),
 				order.getProduct(),
 				order.getPrice(),
 				order.getQuantity(),
