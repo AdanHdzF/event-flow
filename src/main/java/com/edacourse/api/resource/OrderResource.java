@@ -8,6 +8,7 @@ import com.edacourse.api.service.OrderService;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -39,6 +40,22 @@ public class OrderResource {
 	public Response cancelOrder(@PathParam("id") String id, CancelOrderRequest request) {
 		Order order = orderService.cancelOrder(id, request.getReason());
 		return Response.ok(OrderResponse.from(order)).build();
+	}
+
+	@GET
+	public Response findAllOrders() {
+		return Response.ok(orderService.findAllOrders().stream().map(OrderResponse::from).toList()).build();
+	}
+
+	@GET
+	@Path("/{id}")
+	public Response findOrderById(@PathParam("id") String id) {
+		Order order = orderService.findOrderById(id);
+		if (order != null) {
+			return Response.ok(OrderResponse.from(order)).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
 	}
 
 }

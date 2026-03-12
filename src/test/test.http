@@ -11,6 +11,25 @@ content-type: application/json
 
 }
 
+
+###
+
+GET {{baseUrl}}
+content-type: application/json
+
+
+###
+
+GET {{baseUrl}}4d57028f
+content-type: application/json
+
+
+###
+
+GET {{baseUrl}}4d57078f
+content-type: application/json
+
+
 ###
 
 PUT {{baseUrl}}79cfd661/cancel
@@ -25,3 +44,5 @@ content-type: application/json
 
 GET {{baseUrl}}events
 content-type: application/json
+
+

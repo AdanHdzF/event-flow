@@ -1,5 +1,7 @@
 package com.edacourse.api.service;
 
+import java.util.List;
+
 // import com.edacourse.api.PromotionService;
 import com.edacourse.api.domain.Order;
 import com.edacourse.api.domain.Order.Status;
@@ -59,6 +61,14 @@ public class OrderService {
 		// return order.orElse(null);
 
 		return null;
+	}
+
+	public List<Order> findAllOrders() {
+		return orderRepository.findAll();
+	}
+
+	public Order findOrderById(String id) {
+		return orderRepository.findById(id).orElse(null);
 	}
 
 }
