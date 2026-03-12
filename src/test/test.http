@@ -1,0 +1,27 @@
+@baseUrl = http://localhost:8080/api/orders/
+
+
+POST {{baseUrl}}
+content-type: application/json
+
+{
+	"product": "demo-3",
+	"price": 10.99,
+	"quantity": 20
+
+}
+
+###
+
+PUT {{baseUrl}}79cfd661/cancel
+content-type: application/json
+
+{
+	"reason": "I don't want it anymore"
+}
+
+
+###
+
+GET {{baseUrl}}events
+content-type: application/json
