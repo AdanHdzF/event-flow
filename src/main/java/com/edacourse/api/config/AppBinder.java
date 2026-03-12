@@ -11,21 +11,21 @@ import com.edacourse.api.service.OrderService;
 import jakarta.inject.Singleton;
 
 public class AppBinder extends AbstractBinder {
-
-	private final EventSerializer eventSerializer;
+	private final EventSerializer serializer;
 	private final EventBus eventBus;
 
-	public AppBinder(EventSerializer eventSerializer, EventBus eventBus) {
-		this.eventSerializer = eventSerializer;
+	public AppBinder(EventSerializer serializer, EventBus eventBus) {
+		this.serializer = serializer;
 		this.eventBus = eventBus;
 	}
 
 	@Override
 	protected void configure() {
-		bind(eventSerializer).to(EventSerializer.class);
+		bind(serializer).to(EventSerializer.class);
 		bind(eventBus).to(EventBus.class);
 
 		bind(InMemoryOrderRepository.class).to(OrderRepository.class).in(Singleton.class);
 		bind(OrderService.class).to(OrderService.class).in(Singleton.class);
 	}
+
 }

@@ -2,13 +2,15 @@ package com.edacourse.api.infrastructure.messaging;
 
 public class InventorySubscriber {
 	public InventorySubscriber(EventBus eventBus) {
-
-		eventBus.subscribe("order.created", OrderEvent.class, this::handleOrderCreated);
+		eventBus.subscribe("orders.created", OrderCreatedEvent.class, this::onOrderCreated);
+		eventBus.subscribe("orders.cancelled", OrderCancelledEvent.class, this::onOrderCancelled);
 	}
 
-	private void handleOrderCreated(OrderEvent event) {
-		System.out.println(
-				"InventorySubscriber received [order.created] event: " + event.product() + " at $" + event.price());
-		// Aquí podrías implementar lógica para actualizar el inventario, etc.
+	private void onOrderCreated(OrderCreatedEvent event) {
+		System.out.println("[InventorySubcriber] Order created: " + event);
+	}
+
+	private void onOrderCancelled(OrderCancelledEvent event) {
+		System.out.println("[InventorySubcriber] Order cancelled: " + event);
 	}
 }

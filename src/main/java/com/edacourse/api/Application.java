@@ -8,9 +8,9 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.edacourse.api.config.AppBinder;
+import com.edacourse.api.config.ObjectMapperProvider;
 import com.edacourse.api.infrastructure.messaging.EventBus;
 import com.edacourse.api.infrastructure.messaging.EventSerializer;
-// import com.edacourse.api.infrastructure.messaging.InMemoryEventBus;
 import com.edacourse.api.infrastructure.messaging.InventorySubscriber;
 import com.edacourse.api.infrastructure.messaging.JsonEventSerializer;
 import com.edacourse.api.infrastructure.messaging.KafkaEventBus;
@@ -28,19 +28,18 @@ import com.edacourse.api.resource.OrderResource;
 
 public class Application {
 
-	private static final String BASE_URI = "http://localhost:8080/";
+	private static final String BASE_URI = "http://0.0.0.0:8080/";
 
 	public static void main(String[] args) throws InterruptedException {
 		System.out.println("Application started at " + BASE_URI);
 
 		EventSerializer serializer = new JsonEventSerializer();
-		// EventBus eventBus = new InMemoryEventBus(serializer);
 		EventBus eventBus = new KafkaEventBus(serializer);
 
 		ResourceConfig config = new ResourceConfig()
-				// .packages("com.edacourse.api")
 				.register(new AppBinder(serializer, eventBus))
 				.register(JacksonFeature.class)
+				.register(ObjectMapperProvider.class)
 				.register(OrderResource.class);
 
 		new InventorySubscriber(eventBus);

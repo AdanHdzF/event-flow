@@ -2,9 +2,10 @@ package com.edacourse.api.service;
 
 // import com.edacourse.api.PromotionService;
 import com.edacourse.api.domain.Order;
+import com.edacourse.api.domain.Order.Status;
 import com.edacourse.api.dto.CreateOrderRequest;
 import com.edacourse.api.infrastructure.messaging.EventBus;
-import com.edacourse.api.infrastructure.messaging.OrderEvent;
+import com.edacourse.api.infrastructure.messaging.OrderCreatedEvent;
 import com.edacourse.api.repository.OrderRepository;
 
 import jakarta.inject.Inject;
@@ -37,9 +38,27 @@ public class OrderService {
 		Order order = new Order(dto.getProduct(), dto.getPrice(), dto.getQuantity());
 		orderRepository.save(order);
 
-		eventBus.publish("order.created", new OrderEvent(order.getProduct(), order.getPrice()));
+		eventBus.publish("orders.created", new OrderCreatedEvent(order.getProduct(), order.getPrice()));
 
 		return order;
+	}
+
+	public Order cancelOrder(String id, String reason) {
+		String orderDetails = "Producto: " + id;
+		System.out.println("Orden cancelada: " + orderDetails);
+
+		// promotionService.applyPromotion(dto.getPrice());
+		// notificationService.notify("Orden cancelada: " + orderDetails);
+
+		// Optional<Order> order = orderRepository.findById(id);
+		// order.ifPresent(o -> orderRepository.updateStatus(id, Status.CANCELLED,
+		// reason));
+
+		orderRepository.updateStatus(id, Status.CANCELLED, reason);
+
+		// return order.orElse(null);
+
+		return null;
 	}
 
 }

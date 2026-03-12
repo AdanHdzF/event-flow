@@ -1,6 +1,7 @@
 package com.edacourse.api.resource;
 
 import com.edacourse.api.domain.Order;
+import com.edacourse.api.dto.CancelOrderRequest;
 import com.edacourse.api.dto.CreateOrderRequest;
 import com.edacourse.api.dto.OrderResponse;
 import com.edacourse.api.service.OrderService;
@@ -8,7 +9,9 @@ import com.edacourse.api.service.OrderService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -29,6 +32,13 @@ public class OrderResource {
 	public Response createOrder(CreateOrderRequest request) {
 		Order order = orderService.createOrder(request);
 		return Response.status(Response.Status.CREATED).entity(OrderResponse.from(order)).build();
+	}
+
+	@PUT
+	@Path("/{id}/cancel")
+	public Response cancelOrder(@PathParam("id") String id, CancelOrderRequest request) {
+		Order order = orderService.cancelOrder(id, request.getReason());
+		return Response.ok(OrderResponse.from(order)).build();
 	}
 
 }
