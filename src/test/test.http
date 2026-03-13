@@ -5,9 +5,10 @@ POST {{baseUrl}}
 content-type: application/json
 
 {
+	"customer_id": "customer-123",
 	"product": "demo-3",
 	"price": 10.99,
-	"quantity": 20
+	"quantity": 200
 
 }
 
@@ -20,7 +21,7 @@ content-type: application/json
 
 ###
 
-GET {{baseUrl}}4d57028f
+GET {{baseUrl}}cd9cfcad
 content-type: application/json
 
 
