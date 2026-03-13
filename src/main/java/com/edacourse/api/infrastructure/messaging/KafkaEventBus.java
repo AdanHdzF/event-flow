@@ -66,7 +66,7 @@ public class KafkaEventBus implements EventBus {
 		props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 		props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
 		props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-		props.put(ConsumerConfig.GROUP_ID_CONFIG, "eventflow-" + topic);
+		props.put(ConsumerConfig.GROUP_ID_CONFIG, "eventflow-" + topic + "-" + java.util.UUID.randomUUID());
 		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
 		KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
