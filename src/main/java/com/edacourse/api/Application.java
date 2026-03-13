@@ -16,7 +16,11 @@ import com.edacourse.api.infrastructure.messaging.KafkaEventBus;
 import com.edacourse.api.resource.OrderResource;
 import com.edacourse.api.resource.OrderSseResource;
 import com.edacourse.api.service.InventoryService;
+import com.edacourse.api.service.NotificationService;
+import com.edacourse.api.service.PaymentService;
 import com.edacourse.api.subscriber.InventorySubscriber;
+import com.edacourse.api.subscriber.NotificationSubscriber;
+import com.edacourse.api.subscriber.PaymentSubscriber;
 import com.edacourse.api.subscriber.SseBridgeSubscriber;
 
 // import com.edacourse.api.di.Container;
@@ -39,7 +43,9 @@ public class Application {
 		EventSerializer serializer = new JsonEventSerializer();
 		EventBus eventBus = new KafkaEventBus(serializer);
 		OrderSseResource orderSseResource = new OrderSseResource();
-		InventoryService inventoryService = new InventoryService();
+		InventoryService inventoryService = new InventoryService(eventBus);
+		PaymentService paymentService = new PaymentService(eventBus);
+		NotificationService notificationService = new NotificationService();
 
 		ResourceConfig config = new ResourceConfig()
 				.register(new AppBinder(serializer, eventBus,
@@ -50,6 +56,8 @@ public class Application {
 				.register(orderSseResource);
 
 		new InventorySubscriber(eventBus, inventoryService);
+		new PaymentSubscriber(eventBus, paymentService);
+		new NotificationSubscriber(eventBus, notificationService);
 		new SseBridgeSubscriber(eventBus, serializer, orderSseResource);
 
 		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);

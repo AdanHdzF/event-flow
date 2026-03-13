@@ -41,7 +41,8 @@ public class OrderService {
 		orderRepository.save(order);
 
 		eventBus.publish("orders.created",
-				new OrderCreatedEvent(order.getCustomerId(), order.getProduct(), order.getPrice(), order.getQuantity()),
+				new OrderCreatedEvent(order.getCustomerId(), order.getId(), order.getProduct(), order.getPrice(),
+						order.getQuantity()),
 				order.getCustomerId());
 
 		return order;

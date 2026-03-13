@@ -50,9 +50,9 @@ public class KafkaEventBus implements EventBus {
 		ProducerRecord<String, String> record = new ProducerRecord<>(topic, partitionKey, json);
 		producer.send(record, (metadata, exception) -> {
 			if (exception != null) {
-				System.err.println("Error publicando evento en Kafka: " + exception.getMessage());
+				System.err.println("[KafkaEventBus] Error publicando evento en Kafka: " + exception.getMessage());
 			} else {
-				System.out.println("Publicado evento en topic " + topic + " con KafkaEventBus: " + event
+				System.out.println("[KafkaEventBus] Publicado evento en topic " + topic + " con KafkaEventBus: " + event
 						+ ", partition: " + metadata.partition() + ", offset: " + metadata.offset());
 			}
 		});

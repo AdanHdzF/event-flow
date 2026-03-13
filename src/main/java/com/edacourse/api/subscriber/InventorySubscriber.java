@@ -15,11 +15,11 @@ public class InventorySubscriber {
 	}
 
 	private void onOrderCreated(OrderCreatedEvent event) {
+		System.out.println("[InventorySubcriber] onOrderCreated");
 		inventoryService.updateInventory(event.product(), event.quantity());
-		// System.out.println("[InventorySubcriber] Order created: " + event);
 	}
 
 	private void onOrderCancelled(OrderCancelledEvent event) {
-		System.out.println("[InventorySubcriber] Order cancelled: " + event);
+		System.out.println("[InventorySubcriber] onOrderCancelled");
 	}
 }

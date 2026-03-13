@@ -1,4 +1,4 @@
 package com.edacourse.api.domain.event;
 
-public record OrderCreatedEvent(String customerId, String product, double price, int quantity) {
+public record OrderCreatedEvent(String customerId, String id, String product, double price, int quantity) {
 }

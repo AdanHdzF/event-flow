@@ -44,6 +44,10 @@ public class OrderResponse {
 		return id;
 	}
 
+	public String getCustomerId() {
+		return customerId;
+	}
+
 	public String getProduct() {
 		return product;
 	}
