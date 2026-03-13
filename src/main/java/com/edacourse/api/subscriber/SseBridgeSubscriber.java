@@ -7,14 +7,15 @@ import com.edacourse.api.infrastructure.messaging.EventSerializer;
 import com.edacourse.api.resource.OrderSseResource;
 
 public class SseBridgeSubscriber {
+	private final String CONSUMER_GROUP = "sse-bridge-group";
 	private final OrderSseResource sseResource;
 	private final EventSerializer serializer;
 
 	public SseBridgeSubscriber(EventBus eventBus, EventSerializer serializer, OrderSseResource sseResource) {
 		this.sseResource = sseResource;
 		this.serializer = serializer;
-		eventBus.subscribe("orders.created", OrderCreatedEvent.class, this::onOrderCreated);
-		eventBus.subscribe("orders.canceled", OrderCancelledEvent.class, this::onOrderCancelled);
+		eventBus.subscribe("orders.created", OrderCreatedEvent.class, this::onOrderCreated, CONSUMER_GROUP);
+		eventBus.subscribe("orders.canceled", OrderCancelledEvent.class, this::onOrderCancelled, CONSUMER_GROUP);
 	}
 
 	private void onOrderCreated(OrderCreatedEvent event) {

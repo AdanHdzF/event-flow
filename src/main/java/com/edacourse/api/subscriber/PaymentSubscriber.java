@@ -6,13 +6,14 @@ import com.edacourse.api.infrastructure.messaging.EventBus;
 import com.edacourse.api.service.PaymentService;
 
 public class PaymentSubscriber {
+	private static final String CONSUMER_GROUP = "payment-service-group";
 	private final PaymentService paymentService;
 
 	public PaymentSubscriber(EventBus eventBus, PaymentService paymentService) {
 		this.paymentService = paymentService;
-		eventBus.subscribe("orders.created", OrderCreatedEvent.class, this::onOrderCreated);
+		eventBus.subscribe("orders.created", OrderCreatedEvent.class, this::onOrderCreated, CONSUMER_GROUP);
 		// eventBus.subscribe("orders.cancelled", OrderCancelledEvent.class,
-		// this::onOrderCancelled);
+		// this::onOrderCancelled, CONSUMER_GROUP);
 	}
 
 	private void onOrderCreated(OrderCreatedEvent event) {
