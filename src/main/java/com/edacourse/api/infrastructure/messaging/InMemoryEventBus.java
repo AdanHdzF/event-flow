@@ -54,7 +54,7 @@ public class InMemoryEventBus implements EventBus {
 	}
 
 	@Override
-	public <T> void subscribe(String topic, Class<T> eventType, EventHandler<T> handler) {
+	public <T> void subscribe(String topic, Class<T> eventType, EventHandler<T> handler, String consumerGroup) {
 		Objects.requireNonNull(topic, "topic cannot be null");
 		Objects.requireNonNull(eventType, "eventType cannot be null");
 		Objects.requireNonNull(handler, "handler cannot be null");

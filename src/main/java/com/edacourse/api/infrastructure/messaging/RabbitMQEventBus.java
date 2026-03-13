@@ -70,7 +70,7 @@ public class RabbitMQEventBus implements EventBus {
 	}
 
 	@Override
-	public <T> void subscribe(String topic, Class<T> eventType, EventHandler<T> handler) {
+	public <T> void subscribe(String topic, Class<T> eventType, EventHandler<T> handler, String consumerGroup) {
 		try {
 			channel.exchangeDeclare(topic, "fanout", true);
 			String queue = channel.queueDeclare().getQueue();
