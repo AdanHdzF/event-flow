@@ -16,14 +16,14 @@ public class NotificationSubscriber {
 	}
 
 	private void onInventoryReserved(InventoryReservedEvent event) {
-		System.out.println("[NotificationSubscriber] onInventoryReserved");
+		// System.out.println("[NotificationSubscriber] onInventoryReserved");
 
 		notificationService.notifyEvent("inventory.reserved",
 				"********** Inventory reserved for Product: " + event.product());
 	}
 
 	private void onPaymentCompleted(PaymentCompletedEvent event) {
-		System.out.println("[NotificationSubscriber] onPaymentCompleted");
+		// System.out.println("[NotificationSubscriber] onPaymentCompleted");
 
 		notificationService.notifyEvent("payment.completed",
 				"********** Payment completed for Order ID: " + event.orderId());

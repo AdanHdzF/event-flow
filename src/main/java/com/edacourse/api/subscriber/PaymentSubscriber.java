@@ -16,7 +16,7 @@ public class PaymentSubscriber {
 	}
 
 	private void onOrderCreated(OrderCreatedEvent event) {
-		System.out.println("[PaymentSubscriber] onOrderCreated");
+		// System.out.println("[PaymentSubscriber] onOrderCreated");
 		paymentService.processPayment(event.id());
 	}
 

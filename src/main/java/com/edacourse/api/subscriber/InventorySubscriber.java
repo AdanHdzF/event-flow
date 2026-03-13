@@ -15,7 +15,7 @@ public class InventorySubscriber {
 	}
 
 	private void onOrderCreated(OrderCreatedEvent event) {
-		System.out.println("[InventorySubcriber] onOrderCreated");
+		// System.out.println("[InventorySubcriber] onOrderCreated");
 		inventoryService.updateInventory(event.product(), event.quantity());
 	}
 
