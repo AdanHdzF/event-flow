@@ -1,12 +1,14 @@
 package com.edacourse.api.infrastructure.messaging;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-public class RabbitMQEventBus implements EventBus {
+public class RabbitMQEventBus implements EventBus, AdvancedEventBus {
 
 	private final Connection connection;
 	private final Channel channel;
@@ -17,7 +19,7 @@ public class RabbitMQEventBus implements EventBus {
 
 		String host = System.getenv("RABBITMQ_HOST");
 		int port = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
-		String username = System.getenv("RABBITMQ_USER");
+		String username = System.getenv("RABBITMQ_USERNAME");
 		String password = System.getenv("RABBITMQ_PASSWORD");
 
 		ConnectionFactory factory = new ConnectionFactory();
@@ -33,6 +35,9 @@ public class RabbitMQEventBus implements EventBus {
 			try {
 				con = factory.newConnection();
 				ch = con.createChannel();
+
+				ch.confirmSelect(); // Habilitar confirmaciones de publicación
+				ch.basicQos(1); // Procesar un mensaje a la vez
 
 				System.out.println("Connected to RabbitMQ on " + host + ":" + port);
 				break;
@@ -53,6 +58,12 @@ public class RabbitMQEventBus implements EventBus {
 
 	@Override
 	public void publish(String topic, Object event) {
+		publish(topic, event, null);
+
+	}
+
+	@Override
+	public void publish(String topic, Object event, String partitionKey) {
 		try {
 			channel.exchangeDeclare(topic, "fanout", true);
 			String message = serializer.serialize(event);
@@ -63,27 +74,87 @@ public class RabbitMQEventBus implements EventBus {
 	}
 
 	@Override
-	public void publish(String topic, Object event, String partitionKey) {
-		// TODO: RabbitMQ no tiene particiones, pero podríamos usar el partitionKey para
-		// enrutar a diferentes colas si es necesario
-		publish(topic, event);
+	public void publish(String topic, String routingKey, Object event) {
+		System.out
+				.println("----- [RabbitMQEventBus] Publishing to topic: " + topic + " with routing key: " + routingKey);
+		try {
+			channel.exchangeDeclare(topic, "topic", true);
+			String message = serializer.serialize(event);
+			channel.basicPublish(topic, routingKey, null, message.getBytes());
+		} catch (Exception e) {
+			throw new RuntimeException("Error publishing event to RabbitMQ: " + e.getMessage(), e);
+		}
 	}
 
 	@Override
 	public <T> void subscribe(String topic, Class<T> eventType, EventHandler<T> handler, String consumerGroup) {
-		try {
-			channel.exchangeDeclare(topic, "fanout", true);
-			String queue = channel.queueDeclare().getQueue();
-			channel.queueBind(queue, topic, "");
+		subscribe(topic, "#", eventType, handler);
+	}
 
-			channel.basicConsume(queue, true, (consumerTag, delivery) -> {
-				String json = new String(delivery.getBody(), StandardCharsets.UTF_8);
-				T event = serializer.deserialize(json, eventType);
-				handler.handle(event);
+	@Override
+	public <T> void subscribe(String topic, String routingKeyOrPattern, Class<T> eventType, EventHandler<T> handler) {
+		System.out
+				.println("----- [RabbitMQEventBus] Subscribing to topic: " + topic + " with routing key: "
+						+ routingKeyOrPattern);
+		try {
+			channel.exchangeDeclare(topic, "topic", true);
+			String dlxExchange = topic + ".dlx";
+			channel.exchangeDeclare(dlxExchange, "fanout", true);
+
+			Map<String, Object> queueArgs = new HashMap<>();
+			queueArgs.put("x-dead-letter-exchange", dlxExchange);
+			String queue = channel.queueDeclare("", true, false, true, queueArgs).getQueue();
+
+			channel.queueBind(queue, topic, routingKeyOrPattern);
+
+			channel.basicConsume(queue, false, (consumerTag, delivery) -> {
+				try {
+					String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+					T event = serializer.deserialize(message, eventType);
+					handler.handle(event);
+
+					channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+
+				} catch (Exception e) {
+					channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+					System.err.println("Error processing message: " + e.getMessage());
+					// Aquí podríamos agregar lógica adicional para manejar el error, como
+					// reintentos o alertas
+				}
 			}, consumerTag -> {
 			});
+
 		} catch (Exception e) {
 			throw new RuntimeException("Error subscribing to RabbitMQ: " + e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public <T> void onDeadLetter(String topic, Class<T> eventType, EventHandler<T> handler) {
+		try {
+			String dlxExchange = topic + ".dlx";
+			String dlqName = topic + ".dlq";
+
+			channel.exchangeDeclare(dlxExchange, "fanout", true);
+			channel.queueDeclare(dlqName, true, false, false, null);
+			channel.queueBind(dlqName, dlxExchange, "#");
+
+			channel.basicConsume(dlqName, false, (consumerTag, delivery) -> {
+				try {
+					String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+					T event = serializer.deserialize(message, eventType);
+					handler.handle(event);
+
+					channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+				} catch (Exception e) {
+					channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
+					System.err.println("Error processing dead letter message: " + e.getMessage());
+				}
+			}, consumerTag -> {
+			});
+			System.out.println("Subscribed to RabbitMQ dead letter queue for topic: " + topic);
+		} catch (Exception e) {
+			throw new RuntimeException("Error subscribing to RabbitMQ dead letter queue: " + e.getMessage(), e);
 		}
 	}
 

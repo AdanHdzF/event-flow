@@ -7,7 +7,7 @@ import com.edacourse.api.domain.Order;
 import com.edacourse.api.domain.Order.Status;
 import com.edacourse.api.domain.event.OrderCreatedEvent;
 import com.edacourse.api.dto.CreateOrderRequest;
-import com.edacourse.api.infrastructure.messaging.EventBus;
+import com.edacourse.api.infrastructure.messaging.RoutablePublisher;
 import com.edacourse.api.repository.OrderRepository;
 
 import jakarta.inject.Inject;
@@ -17,13 +17,13 @@ import jakarta.inject.Singleton;
 public class OrderService {
 	// private final NotificationService notificationService;
 	// private final PromotionService promotionService;
-	private final EventBus eventBus;
+	private final RoutablePublisher eventBus;
 	private final OrderRepository orderRepository;
 
 	// public OrderService(NotificationService notificationService, PromotionService
 	// promotionService, EventBus eventBus) {
 	@Inject
-	public OrderService(EventBus eventBus, OrderRepository orderRepository) {
+	public OrderService(RoutablePublisher eventBus, OrderRepository orderRepository) {
 		// this.notificationService = notificationService;
 		// this.promotionService = promotionService;
 		this.eventBus = eventBus;
@@ -40,10 +40,15 @@ public class OrderService {
 		Order order = new Order(dto.getCustomerId(), dto.getProduct(), dto.getPrice(), dto.getQuantity());
 		orderRepository.save(order);
 
-		eventBus.publish("orders.created",
+		// eventBus.publish("orders.created",
+		// new OrderCreatedEvent(order.getCustomerId(), order.getId(),
+		// order.getProduct(), order.getPrice(),
+		// order.getQuantity()),
+		// order.getCustomerId());
+
+		eventBus.publish("orders.created", "orders.created",
 				new OrderCreatedEvent(order.getCustomerId(), order.getId(), order.getProduct(), order.getPrice(),
-						order.getQuantity()),
-				order.getCustomerId());
+						order.getQuantity()));
 
 		return order;
 	}

@@ -9,15 +9,18 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import com.edacourse.api.config.AppBinder;
 import com.edacourse.api.config.ObjectMapperProvider;
-import com.edacourse.api.infrastructure.messaging.EventBus;
+import com.edacourse.api.infrastructure.messaging.AdvancedEventBus;
 import com.edacourse.api.infrastructure.messaging.EventSerializer;
 import com.edacourse.api.infrastructure.messaging.JsonEventSerializer;
-import com.edacourse.api.infrastructure.messaging.KafkaEventBus;
+import com.edacourse.api.infrastructure.messaging.RabbitMQEventBus;
 import com.edacourse.api.resource.OrderResource;
 import com.edacourse.api.resource.OrderSseResource;
+import com.edacourse.api.service.AnalyticsService;
 import com.edacourse.api.service.InventoryService;
 import com.edacourse.api.service.NotificationService;
 import com.edacourse.api.service.PaymentService;
+import com.edacourse.api.subscriber.AnalyticsSubscriber;
+import com.edacourse.api.subscriber.DlqSubscriber;
 import com.edacourse.api.subscriber.InventorySubscriber;
 import com.edacourse.api.subscriber.NotificationSubscriber;
 import com.edacourse.api.subscriber.PaymentSubscriber;
@@ -41,11 +44,13 @@ public class Application {
 		System.out.println("Application started at " + BASE_URI);
 
 		EventSerializer serializer = new JsonEventSerializer();
-		EventBus eventBus = new KafkaEventBus(serializer);
+		// EventBus eventBus = new KafkaEventBus(serializer);
+		AdvancedEventBus eventBus = new RabbitMQEventBus(serializer);
 		OrderSseResource orderSseResource = new OrderSseResource();
 		InventoryService inventoryService = new InventoryService(eventBus);
 		PaymentService paymentService = new PaymentService(eventBus);
 		NotificationService notificationService = new NotificationService();
+		AnalyticsService analyticsService = new AnalyticsService();
 
 		ResourceConfig config = new ResourceConfig()
 				.register(new AppBinder(serializer, eventBus,
@@ -59,6 +64,9 @@ public class Application {
 		new PaymentSubscriber(eventBus, paymentService);
 		new NotificationSubscriber(eventBus, notificationService);
 		new SseBridgeSubscriber(eventBus, serializer, orderSseResource);
+		new AnalyticsSubscriber(eventBus, analyticsService);
+
+		new DlqSubscriber(eventBus);
 
 		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);
 
