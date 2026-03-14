@@ -18,6 +18,15 @@ docker-compose up
 
 docker-compose up --remove-orphans
 
-http://localhost:15672
 
+
+
+docker logs <container_id>
+
+
+
+---------------------------------------------------------------------------
+
+
+http://localhost:15672
 
