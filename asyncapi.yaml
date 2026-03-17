@@ -157,14 +157,7 @@ components:
             description: Este evento se publica cuando se crea una nueva orden.
             contentType: application/json
             payload:
-                type: object
-                properties:
-                    product:
-                        type: string
-                        description: ID del producto en la orden.
-                    price:
-                        type: number
-                        description: Precio del producto en la orden.
+                $ref: '#/components/schemas/OrderCreatedPayload'
             examples:
                 - name: laptopOrder
                   summary: Ejemplo de orden de laptop
@@ -178,14 +171,7 @@ components:
             description: Este evento se publica cuando se cancela una orden.
             contentType: application/json
             payload:
-                type: object
-                properties:
-                    id:
-                        type: string
-                        description: ID de la orden cancelada.
-                    reason:
-                        type: string
-                        description: Razón de la cancelación.
+                $ref: '#/components/schemas/OrderCancelledPayload'
             examples:
                 - name: laptopOrderCancelled
                   summary: Ejemplo de orden de laptop cancelada
@@ -199,14 +185,7 @@ components:
             description: Este evento se publica cuando se reserva inventario para una orden.
             contentType: application/json
             payload:
-                type: object
-                properties:
-                    product:
-                        type: string
-                        description: ID del producto en la orden.
-                    quantity:
-                        type: integer
-                        description: Cantidad de inventario reservada.
+                $ref: '#/components/schemas/InventoryReservedPayload'
             examples:
                 - name: laptopOrderReserved
                   summary: Ejemplo de orden de laptop con inventario reservado
@@ -220,11 +199,7 @@ components:
             description: Este evento se publica cuando se completa un pago para una orden.
             contentType: application/json
             payload:
-                type: object
-                properties:
-                    orderId:
-                        type: string
-                        description: ID de la orden para la cual se completó el pago.
+                $ref: '#/components/schemas/PaymentCompletedPayload'
             examples:
                 - name: laptopPaymentCompleted
                   summary: Ejemplo de pago completado para una orden de laptop
@@ -232,6 +207,39 @@ components:
                       orderId: '1324'
 
     schemas:
+        OrderCreatedPayload:
+            type: object
+            properties:
+                product:
+                    type: string
+                price:
+                    type: number
+
+        OrderCancelledPayload:
+            type: object
+            properties:
+                id:
+                    type: string
+                reason:
+                    type: string
+
+        InventoryReservedPayload:
+            type: object
+            properties:
+                product:
+                    type: string
+                    description: ID del producto en la orden.
+                quantity:
+                    type: integer
+                    description: Cantidad de inventario reservada.
+
+        PaymentCompletedPayload:
+            type: object
+            properties:
+                orderId:
+                    type: string
+                    description: ID de la orden para la cual se completó el pago.
+
         securitySchemes:
             rabbitmqCredentials:
                 type: userPassword
