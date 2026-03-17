@@ -62,6 +62,36 @@ channels:
                     durable: true
                     autoDelete: false
 
+    inventory.reserved:
+        address: inventory.reserved
+        description: Canal para eventos de reserva de inventario.
+        messages:
+            inventoryReservedEvent:
+                $ref: '#/components/messages/inventoryReservedEvent'
+        bindings:
+            amqp:
+                is: routingKey
+                exchange:
+                    name: eventflow
+                    type: topic
+                    durable: true
+                    autoDelete: false
+
+    payment.completed:
+        address: payment.completed
+        description: Canal para eventos de pago completado.
+        messages:
+            paymentCompletedEvent:
+                $ref: '#/components/messages/paymentCompletedEvent'
+        bindings:
+            amqp:
+                is: routingKey
+                exchange:
+                    name: eventflow
+                    type: topic
+                    durable: true
+                    autoDelete: false
+
 operations:
     publishOrderCreated:
         action: send
@@ -79,6 +109,14 @@ operations:
         tags:
             - name: orders
 
+    publishInventoryReserved:
+        action: send
+        description: Publica un evento de reserva de inventario.
+        channel:
+            $ref: '#/channels/inventory.reserved'
+        tags:
+            - name: inventory
+
     onOrderCreatedInventory:
         action: receive
         description: Recibe un evento de creación de orden.
@@ -94,6 +132,22 @@ operations:
             $ref: '#/channels/orders.cancelled'
         tags:
             - name: inventory
+
+    publishPaymentCompleted:
+        action: send
+        description: Publica un evento de pago completado.
+        channel:
+            $ref: '#/channels/payment.completed'
+        tags:
+            - name: payment
+
+    onOrderCreatedPayment:
+        action: receive
+        description: Recibe un evento de creación de orden.
+        channel:
+            $ref: '#/channels/orders.created'
+        tags:
+            - name: payment
 
 components:
     messages:
@@ -138,6 +192,44 @@ components:
                   payload:
                       id: 'uuid'
                       reason: 'Cliente solicitó la cancelación'
+
+        inventoryReservedEvent:
+            name: InventoryReservedEvent
+            title: Evento de reserva de inventario
+            description: Este evento se publica cuando se reserva inventario para una orden.
+            contentType: application/json
+            payload:
+                type: object
+                properties:
+                    product:
+                        type: string
+                        description: ID del producto en la orden.
+                    quantity:
+                        type: integer
+                        description: Cantidad de inventario reservada.
+            examples:
+                - name: laptopOrderReserved
+                  summary: Ejemplo de orden de laptop con inventario reservado
+                  payload:
+                      product: 'laptop-123'
+                      quantity: 1
+
+        paymentCompletedEvent:
+            name: PaymentCompletedEvent
+            title: Evento de pago completado
+            description: Este evento se publica cuando se completa un pago para una orden.
+            contentType: application/json
+            payload:
+                type: object
+                properties:
+                    orderId:
+                        type: string
+                        description: ID de la orden para la cual se completó el pago.
+            examples:
+                - name: laptopPaymentCompleted
+                  summary: Ejemplo de pago completado para una orden de laptop
+                  payload:
+                      orderId: '1324'
 
     schemas:
         securitySchemes:
