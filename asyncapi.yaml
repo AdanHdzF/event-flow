@@ -1,0 +1,146 @@
+asyncapi: 3.0.0
+
+info:
+    title: Eventflow arquitectura orientada a eventos
+    version: 1.0.0
+    description: |
+        Este es un ejemplo de una arquitectura orientada a eventos utilizando AsyncAPI. En esta arquitectura, los servicios se comunican a través de eventos, lo que permite una mayor flexibilidad y escalabilidad.
+    contact:
+        name: Equipo de Soporte de Eventflow
+        email: eventflow@support.com
+
+    license:
+        name: MIT
+
+defaultContentType: application/json
+
+servers:
+    rabbitmq-dev:
+        host: rabbitmq:5672
+        description: RabbitMQ entorno de desarrollo.
+        protocol: amqp
+        security:
+            - $ref: '#/components/schemas/securitySchemes/rabbitmqCredentials'
+        tags:
+            - name: development
+
+    kafka-dev:
+        host: kafka:9092
+        description: Kafka entorno de desarrollo.
+        protocol: kafka
+        tags:
+            - name: development
+
+channels:
+    orders.created:
+        address: orders.created
+        description: Canal para eventos de creación de órdenes.
+        messages:
+            orderCreatedEvent:
+                $ref: '#/components/messages/orderCreatedEvent'
+        bindings:
+            amqp:
+                is: routingKey
+                exchange:
+                    name: eventflow
+                    type: topic
+                    durable: true
+                    autoDelete: false
+
+    orders.cancelled:
+        address: orders.cancelled
+        description: Canal para eventos de cancelación de órdenes.
+        messages:
+            orderCancelledEvent:
+                $ref: '#/components/messages/orderCancelledEvent'
+        bindings:
+            amqp:
+                is: routingKey
+                exchange:
+                    name: eventflow
+                    type: topic
+                    durable: true
+                    autoDelete: false
+
+operations:
+    publishOrderCreated:
+        action: send
+        description: Publica un evento de creación de orden.
+        channel:
+            $ref: '#/channels/orders.created'
+        tags:
+            - name: orders
+
+    publishOrderCancelled:
+        action: send
+        description: Publica un evento de cancelación de orden.
+        channel:
+            $ref: '#/channels/orders.cancelled'
+        tags:
+            - name: orders
+
+    onOrderCreatedInventory:
+        action: receive
+        description: Recibe un evento de creación de orden.
+        channel:
+            $ref: '#/channels/orders.created'
+        tags:
+            - name: inventory
+
+    onOrderCancelledInventory:
+        action: receive
+        description: Recibe un evento de cancelación de orden.
+        channel:
+            $ref: '#/channels/orders.cancelled'
+        tags:
+            - name: inventory
+
+components:
+    messages:
+        orderCreatedEvent:
+            name: OrderCreatedEvent
+            title: Evento de creación de orden
+            description: Este evento se publica cuando se crea una nueva orden.
+            contentType: application/json
+            payload:
+                type: object
+                properties:
+                    product:
+                        type: string
+                        description: ID del producto en la orden.
+                    price:
+                        type: number
+                        description: Precio del producto en la orden.
+            examples:
+                - name: laptopOrder
+                  summary: Ejemplo de orden de laptop
+                  payload:
+                      product: 'laptop-123'
+                      price: 999.99
+
+        orderCancelledEvent:
+            name: OrderCancelledEvent
+            title: Evento de cancelación de orden
+            description: Este evento se publica cuando se cancela una orden.
+            contentType: application/json
+            payload:
+                type: object
+                properties:
+                    id:
+                        type: string
+                        description: ID de la orden cancelada.
+                    reason:
+                        type: string
+                        description: Razón de la cancelación.
+            examples:
+                - name: laptopOrderCancelled
+                  summary: Ejemplo de orden de laptop cancelada
+                  payload:
+                      id: 'uuid'
+                      reason: 'Cliente solicitó la cancelación'
+
+    schemas:
+        securitySchemes:
+            rabbitmqCredentials:
+                type: userPassword
+                description: Credenciales para autenticación en RabbitMQ.
