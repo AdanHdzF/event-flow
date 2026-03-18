@@ -10,7 +10,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import com.edacourse.api.catalog.application.service.CatalogService;
 import com.edacourse.api.catalog.domain.repository.ProductRepository;
 import com.edacourse.api.catalog.infrastructure.cdc.CdcStrategy;
-import com.edacourse.api.catalog.infrastructure.cdc.NativeCdcStrategy;
+import com.edacourse.api.catalog.infrastructure.cdc.CdcStrategyFactory;
 import com.edacourse.api.catalog.infrastructure.persistence.SqlServerProductRepository;
 import com.edacourse.api.catalog.interfaces.rest.CatalogResource;
 import com.edacourse.api.inventory.application.service.InventoryService;
@@ -70,8 +70,14 @@ public class Application {
 		NotificationService notificationService = new NotificationService();
 		new NotificationSubscriber(eventBus, notificationService);
 
+		// SQL Server connection
+		String sqlUrl = System.getenv().getOrDefault("SQLSERVER_URL",
+				"jdbc:sqlserver://sqlserver:1433;databaseName=eventflow;encrypt=false");
+		String sqlUser = System.getenv().getOrDefault("SQLSERVER_USER", "sa");
+		String sqlPass = System.getenv().getOrDefault("SQLSERVER_PASSWORD", "EventFlow123!");
+
 		// Catalog context
-		ProductRepository productRepo = new SqlServerProductRepository();
+		ProductRepository productRepo = new SqlServerProductRepository(sqlUrl, sqlUser, sqlPass);
 		CatalogService catalogService = new CatalogService(productRepo);
 
 		// Search context
@@ -79,8 +85,8 @@ public class Application {
 		new SearchSubscriber(eventBus, searchService);
 
 		// CDC
-		CdcStrategy cdcStrategy = new NativeCdcStrategy(eventBus, serializer);
-		cdcStrategy.start();
+		CdcStrategy cdcStrategy = CdcStrategyFactory.create(sqlUrl, sqlUser, sqlPass);
+		cdcStrategy.start(eventBus, "products.changed");
 
 		// SSE bridge
 		new SseBridgeSubscriber(eventBus, serializer, sseResource);
