@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  asyncapi-docs:
+    image: asyncapi/cli:6.0.0
+    container_name: eventflow-asyncapi-docs
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: generate fromTemplate asyncapi.yaml @asyncapi/html-template -o docs --force-write
+    profiles:
+      - docs
+
+  asyncapi-validate:
+    image: asyncapi/cli:6.0.0
+    container_name: eventflow-asyncapi-validate
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: validate asyncapi.yaml
+    profiles:
+      - validate
+
+  asyncapi-code-generator:
+    image: asyncapi/cli:6.0.0
+    container_name: eventflow-asyncapi-code-generator
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: generate models java asyncapi.yaml --packageName com.eventflow.events --output generated-java --use-new-generator
+    profiles:
+      - code-generator
+
+  asyncapi-studio:
+    image: asyncapi/studio:latest
+    container_name: eventflow-asyncapi-studio
+    ports:
+      - "3210:80"
+    volumes:
+      - .:/app
+    profiles:
+      - studio
