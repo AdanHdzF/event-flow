@@ -50,6 +50,72 @@ public class SearchService {
 		String response = searchRepository.put("/" + indexName + "/_doc/" + productId, doc);
 	}
 
+	public String searchFullText(String query) {
+		String body = """
+				{
+				    "query": {
+				        "multi_match": {
+				            "query": "%s",
+				            "fields": ["name^3", "description^2", "category"],
+				            "fuzziness": "AUTO"
+				        }
+				    },
+				    "size": 10
+				}
+				""".formatted(escape(query));
+		return searchRepository.post("/" + indexName + "/_search", body);
+	}
+
+	public String searchSemantic(String query) {
+		float[] queryEmbedding = embeddingGenerator.generate(query);
+		String body = """
+				{
+				    "size": 10,
+				    "query": {
+				        "knn": {
+				            "embedding": {
+				                "vector": %s,
+				                "k": 10
+				            }
+				        }
+				    }
+				}
+				""".formatted(embeddingGenerator.toJsonArray(queryEmbedding));
+		return searchRepository.post("/" + indexName + "/_search", body);
+	}
+
+	public String searchHybrid(String query) {
+		float[] queryEmbedding = embeddingGenerator.generate(query);
+		String body = """
+				{
+				    "size": 10,
+				    "query": {
+				        "bool": {
+				            "should": [
+				                {
+				                    "multi_match": {
+				                        "query": "%s",
+				                        "fields": ["name^3", "description^2", "category"],
+				                        "fuzziness": "AUTO",
+				                        "boost": 1.0
+				                    }
+				                },
+				                {
+				                    "knn": {
+				                        "embedding": {
+				                            "vector": %s,
+				                            "k": 5
+				                        }
+				                    }
+				                }
+				            ]
+				        }
+				    }
+				}
+				""".formatted(escape(query), embeddingGenerator.toJsonArray(queryEmbedding));
+		return searchRepository.post("/" + indexName + "/_search", body);
+	}
+
 	private Object escape(String name) {
 		if (name == null) {
 			return "";
@@ -77,7 +143,7 @@ public class SearchService {
 			}
 		}
 
-		return escaped.toString();
+		return escaped.toString().replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
 	}
 
 }

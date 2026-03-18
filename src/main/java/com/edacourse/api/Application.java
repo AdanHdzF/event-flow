@@ -32,6 +32,7 @@ import com.edacourse.api.search.infrastructure.opensearch.OpenSearchRepository;
 import com.edacourse.api.search.infrastructure.opensearch.SearchRepository;
 import com.edacourse.api.search.infrastructure.opensearch.TrigramEmbeddingGenerator;
 import com.edacourse.api.search.infrastructure.subscriber.SearchSubscriber;
+import com.edacourse.api.search.interfaces.rest.SearchResource;
 import com.edacourse.api.shared.config.AppBinder;
 import com.edacourse.api.shared.config.ObjectMapperProvider;
 import com.edacourse.api.shared.infrastructure.messaging.DeadLetterHandler;
@@ -108,11 +109,12 @@ public class Application {
 
 		// Jersey HTTP server
 		ResourceConfig config = new ResourceConfig()
-				.register(new AppBinder(serializer, eventBus, sseResource, catalogService))
+				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService))
 				.register(JacksonFeature.class)
 				.register(ObjectMapperProvider.class)
 				.register(OrderResource.class)
-				.register(CatalogResource.class);
+				.register(CatalogResource.class)
+				.register(SearchResource.class);
 
 		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);
 
@@ -121,6 +123,7 @@ public class Application {
 		System.out.println("Contextos: Order, Inventory, Payment, Shipping, Notification, Catalog, Search");
 		System.out.println("REST: " + BASE_URI + "api/orders");
 		System.out.println("REST: " + BASE_URI + "api/products");
+		System.out.println("REST: " + BASE_URI + "api/search");
 		System.out.println("SSE:  " + BASE_URI + "api/orders/events");
 
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
