@@ -1,0 +1,15 @@
+@baseUrl = http://localhost:8090/api/search
+
+
+GET {{baseUrl}}/full-text/?q=Samsung
+content-type: application/json
+
+###
+
+GET {{baseUrl}}/semantic/?q=TELEVISION
+content-type: application/json
+
+###
+
+GET {{baseUrl}}/hybrid/?q=TV
+content-type: application/json

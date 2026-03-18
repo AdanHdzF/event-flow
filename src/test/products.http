@@ -12,3 +12,56 @@ content-type: application/json
 	"stock": 50
 }
 
+
+###
+
+POST {{baseUrl}}
+content-type: application/json
+
+{
+	"name":"Iphone",
+	"description":"Iphone 14 Pro Max",
+	"price": 1399.99,
+	"category": "Electronics", 
+	"stock": 500
+}
+
+###
+
+POST {{baseUrl}}
+content-type: application/json
+
+{
+	"name":"TV Samsung",
+	"description":"TV Samsung 55 pulgadas",
+	"price": 899.99,
+	"category": "Electronics", 
+	"stock": 500
+}
+
+###
+
+POST {{baseUrl}}
+content-type: application/json
+
+{
+	"name":"Audífonos Sony",
+	"description":"Audífonos Sony con cancelación de ruido",
+	"price": 199.99,
+	"category": "Electronics", 
+	"stock": 50
+}
+
+###
+
+POST {{baseUrl}}
+content-type: application/json
+
+{
+	"name":"Macbook Pro",
+	"description":"Macbook Pro con M1",
+	"price": 1999.99,
+	"category": "Electronics", 
+	"stock": 50
+}
+
