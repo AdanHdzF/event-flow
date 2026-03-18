@@ -27,6 +27,10 @@ import com.edacourse.api.payment.domain.repository.PaymentRepository;
 import com.edacourse.api.payment.infrastructure.persistence.InMemoryPaymentRepository;
 import com.edacourse.api.payment.infrastructure.subscriber.PaymentSubscriber;
 import com.edacourse.api.search.application.service.SearchService;
+import com.edacourse.api.search.infrastructure.opensearch.EmbeddingGenerator;
+import com.edacourse.api.search.infrastructure.opensearch.OpenSearchRepository;
+import com.edacourse.api.search.infrastructure.opensearch.SearchRepository;
+import com.edacourse.api.search.infrastructure.opensearch.TrigramEmbeddingGenerator;
 import com.edacourse.api.search.infrastructure.subscriber.SearchSubscriber;
 import com.edacourse.api.shared.config.AppBinder;
 import com.edacourse.api.shared.config.ObjectMapperProvider;
@@ -80,8 +84,13 @@ public class Application {
 		ProductRepository productRepo = new SqlServerProductRepository(sqlUrl, sqlUser, sqlPass);
 		CatalogService catalogService = new CatalogService(productRepo);
 
+		// OpenSearch
+		SearchRepository searchRepo = new OpenSearchRepository();
+		searchRepo.createIndexIfNotExist("products");
+		EmbeddingGenerator embeddingGenerator = new TrigramEmbeddingGenerator();
+
 		// Search context
-		SearchService searchService = new SearchService();
+		SearchService searchService = new SearchService(searchRepo, embeddingGenerator, "products");
 		new SearchSubscriber(eventBus, searchService);
 
 		// CDC

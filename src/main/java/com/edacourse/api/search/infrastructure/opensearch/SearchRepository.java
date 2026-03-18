@@ -10,4 +10,6 @@ public interface SearchRepository {
 	String delete(String path);
 
 	boolean indexExists(String indexName);
+
+	void createIndexIfNotExist(String indexName);
 }

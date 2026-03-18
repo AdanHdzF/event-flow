@@ -98,4 +98,75 @@ public class OpenSearchRepository implements SearchRepository {
 		}
 	}
 
+	@Override
+	public void createIndexIfNotExist(String indexName) {
+
+		System.out.println("***** Verificando si el índice '" + indexName + "' existe en OpenSearch...");
+		if (indexExists(indexName)) {
+			return;
+		}
+
+		String mapping = """
+				{
+				    "settings": {
+				        "index": {
+				            "knn": true,
+				            "number_of_shards": 1,
+				            "number_of_replicas": 0
+				        },
+				        "analysis": {
+				            "analyzer": {
+				                "spanish_analyzer": {
+				                    "type": "custom",
+				                    "tokenizer": "standard",
+				                    "filter": ["lowercase", "spanish_stop", "spanish_stemmer"]
+				                }
+				            },
+				            "filter": {
+				                "spanish_stop": {
+				                    "type": "stop",
+				                    "stopwords": "spanish"
+				                },
+				                "spanish_stemmer": {
+				                    "type": "stemmer",
+				                    "language": "spanish"
+				                }
+				            }
+				        }
+				    },
+				    "mappings": {
+				        "properties": {
+				            "productId": { "type": "keyword" },
+				            "name": {
+				                "type": "text",
+				                "analyzer": "spanish_analyzer",
+				                "fields": {
+				                    "keyword": { "type": "keyword" }
+				                }
+				            },
+				            "description": {
+				                "type": "text",
+				                "analyzer": "spanish_analyzer"
+				            },
+				            "price": { "type": "float" },
+				            "category": { "type": "keyword" },
+				            "stock": { "type": "integer" },
+				            "embedding": {
+				                "type": "knn_vector",
+				                "dimension": %d,
+				                "method": {
+				                    "name": "hnsw",
+				                    "space_type": "cosinesimil",
+				                    "engine": "lucene"
+				                }
+				            },
+				            "indexed_at": { "type": "date" }
+				        }
+				    }
+				}
+				""".formatted(128); // embeddingGenerator.getEmbeddingDimension() MAGIC NUMBER !!!!
+		String response = put("/" + indexName, mapping);
+		System.out.println("Respuesta de OpenSearch: " + response);
+	}
+
 }

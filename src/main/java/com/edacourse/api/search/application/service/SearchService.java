@@ -1,5 +1,10 @@
 package com.edacourse.api.search.application.service;
 
+import java.time.Instant;
+
+import com.edacourse.api.search.infrastructure.opensearch.EmbeddingGenerator;
+import com.edacourse.api.search.infrastructure.opensearch.SearchRepository;
+
 /**
  * Servicio de busqueda de productos.
  * Por ahora solo registra los cambios detectados.
@@ -7,9 +12,72 @@ package com.edacourse.api.search.application.service;
  */
 public class SearchService {
 
-    public void indexProduct(String productId, String name, String description,
-                             double price, String category, int stock, String operation) {
-        System.out.println("[SEARCH] " + operation + " -> " + productId +
-            " | " + name + " | $" + price + " | stock=" + stock + " | cat=" + category);
-    }
+	private final SearchRepository searchRepository;
+	private final EmbeddingGenerator embeddingGenerator;
+	private final String indexName;
+
+	public SearchService(SearchRepository searchRepository, EmbeddingGenerator embeddingGenerator, String indexName) {
+		this.searchRepository = searchRepository;
+		this.embeddingGenerator = embeddingGenerator;
+		this.indexName = indexName;
+	}
+
+	public void indexProduct(String productId, String name, String description,
+			double price, String category, int stock, String operation) {
+		System.out.println("[SEARCH] " + operation + " -> " + productId +
+				" | " + name + " | $" + price + " | stock=" + stock + " | cat=" + category);
+
+		String textForEmbedding = name + " " + description + " " + category;
+		float[] embedding = embeddingGenerator.generate(textForEmbedding);
+
+		String doc = """
+				{
+				    "productId": "%s",
+				    "name": "%s",
+				    "description": "%s",
+				    "price": %.2f,
+				    "category": "%s",
+				    "stock": %d,
+				    "embedding": %s,
+				    "indexed_at": "%s"
+				}
+				""".formatted(
+				escape(productId), escape(name), escape(description),
+				price, escape(category), stock,
+				embeddingGenerator.toJsonArray(embedding),
+				Instant.now().toString());
+
+		String response = searchRepository.put("/" + indexName + "/_doc/" + productId, doc);
+	}
+
+	private Object escape(String name) {
+		if (name == null) {
+			return "";
+		}
+
+		StringBuilder escaped = new StringBuilder(name.length() + 16);
+
+		for (int i = 0; i < name.length(); i++) {
+			char c = name.charAt(i);
+			switch (c) {
+				case '\"' -> escaped.append("\\\"");
+				case '\\' -> escaped.append("\\\\");
+				case '\b' -> escaped.append("\\b");
+				case '\f' -> escaped.append("\\f");
+				case '\n' -> escaped.append("\\n");
+				case '\r' -> escaped.append("\\r");
+				case '\t' -> escaped.append("\\t");
+				default -> {
+					if (c < 0x20) {
+						escaped.append(String.format("\\u%04x", (int) c));
+					} else {
+						escaped.append(c);
+					}
+				}
+			}
+		}
+
+		return escaped.toString();
+	}
+
 }
