@@ -96,7 +96,8 @@ public class PollingCdcStrategy implements CdcStrategy {
 
 			lastPollTime = newLastPoll;
 		} catch (SQLException e) {
-			System.err.println("[CDC] Error al hacer polling de cambios: " + e.getMessage());
+			System.err.println("[CDC - Polling] Error al hacer polling de cambios: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 

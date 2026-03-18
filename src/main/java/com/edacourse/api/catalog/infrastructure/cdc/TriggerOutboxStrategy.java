@@ -75,7 +75,8 @@ public class TriggerOutboxStrategy implements CdcStrategy {
 				}
 			}
 		} catch (SQLException e) {
-			System.err.println("[CDC] Error al hacer polling de cambios: " + e.getMessage());
+			System.err.println("[CDC - TriggerOutbox] Error al hacer polling de cambios: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 

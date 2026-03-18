@@ -47,19 +47,28 @@ public class NativeCdcStrategy implements CdcStrategy {
 		try (Connection conn = DriverManager.getConnection(jdbcUrl, user, password)) {
 			byte[] currentLsn = getMaxLsn(conn);
 
-			if (currentLsn == null || lastLsn == null)
+			if (currentLsn == null)
 				return;
 
-			String sql = """
-					DECLARE @from_lsn binary(10) = ?;
-					DECLARE @to_lsn binary(10) = ?;
-					IF @from_lsn < @to_lsn
-					    SELECT __$operation, id, name, description, price, category, stock, updated_at
-					    FROM cdc.fn_cdc_get_all_changes_dbo_products(@from_lsn, @to_lsn, N'all');
-					""";
+			if (lastLsn == null) {
+				lastLsn = currentLsn;
+				System.out.println("[CDC] LSN inicializado, comenzando captura de cambios");
+				return;
+			}
+
+			if (java.util.Arrays.equals(lastLsn, currentLsn)) {
+				return;
+			}
+
+			byte[] fromLsn = incrementLsn(conn, lastLsn);
+			if (fromLsn == null)
+				return;
+
+			String sql = "SELECT __$operation, id, name, description, price, category, stock, updated_at " +
+					"FROM cdc.fn_cdc_get_all_changes_dbo_products(?, ?, N'all')";
 
 			try (PreparedStatement ps = conn.prepareStatement(sql)) {
-				ps.setBytes(1, lastLsn);
+				ps.setBytes(1, fromLsn);
 				ps.setBytes(2, currentLsn);
 
 				try (ResultSet rs = ps.executeQuery()) {
@@ -94,6 +103,17 @@ public class NativeCdcStrategy implements CdcStrategy {
 		}
 	}
 
+	private byte[] incrementLsn(Connection conn, byte[] lsn) throws SQLException {
+		try (PreparedStatement stmt = conn.prepareStatement("SELECT sys.fn_cdc_increment_lsn(?) AS next_lsn")) {
+			stmt.setBytes(1, lsn);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next()) {
+				return rs.getBytes("next_lsn");
+			}
+			return null;
+		}
+	}
+
 	private byte[] getMaxLsn(Connection conn) throws SQLException {
 		try (PreparedStatement stmt = conn.prepareStatement("SELECT sys.fn_cdc_get_max_lsn() AS max_lsn")) {
 			ResultSet rs = stmt.executeQuery();
@@ -111,6 +131,7 @@ public class NativeCdcStrategy implements CdcStrategy {
 
 	@Override
 	public void close() {
+		scheduler.shutdown();
 		System.out.println("[CDC] Deteniendo estrategia nativa");
 	}
 }
