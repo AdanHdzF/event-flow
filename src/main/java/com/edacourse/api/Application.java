@@ -7,111 +7,113 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import com.edacourse.api.config.AppBinder;
-import com.edacourse.api.config.ObjectMapperProvider;
-import com.edacourse.api.infrastructure.messaging.AdvancedEventBus;
-import com.edacourse.api.infrastructure.messaging.EventSerializer;
-import com.edacourse.api.infrastructure.messaging.JsonEventSerializer;
-import com.edacourse.api.infrastructure.messaging.RabbitMQEventBus;
-import com.edacourse.api.resource.OrderResource;
-import com.edacourse.api.resource.OrderSseResource;
-import com.edacourse.api.service.AnalyticsService;
-import com.edacourse.api.service.InventoryService;
-import com.edacourse.api.service.NotificationService;
-import com.edacourse.api.service.PaymentService;
-import com.edacourse.api.subscriber.AnalyticsSubscriber;
-import com.edacourse.api.subscriber.DlqSubscriber;
-import com.edacourse.api.subscriber.InventorySubscriber;
-import com.edacourse.api.subscriber.NotificationSubscriber;
-import com.edacourse.api.subscriber.PaymentSubscriber;
-import com.edacourse.api.subscriber.SseBridgeSubscriber;
-
-// import com.edacourse.api.di.Container;
-// import com.edacourse.api.infrastructure.messaging.EventBus;
-// import com.edacourse.api.infrastructure.messaging.EventSerializer;
-// import com.edacourse.api.infrastructure.messaging.InMemoryEventBus;
-// import com.edacourse.api.infrastructure.messaging.JsonEventSerializer;
-// import com.edacourse.api.infrastructure.messaging.OrderEvent;
-// import com.edacourse.api.infrastructure.notification.ConsoleNotification;
-// import com.edacourse.api.infrastructure.notification.NotificationService;
-// import com.edacourse.api.service.OrderService;
+import com.edacourse.api.catalog.application.service.CatalogService;
+import com.edacourse.api.catalog.domain.repository.ProductRepository;
+import com.edacourse.api.catalog.infrastructure.cdc.CdcStrategy;
+import com.edacourse.api.catalog.infrastructure.cdc.NativeCdcStrategy;
+import com.edacourse.api.catalog.infrastructure.persistence.SqlServerProductRepository;
+import com.edacourse.api.catalog.interfaces.rest.CatalogResource;
+import com.edacourse.api.inventory.application.service.InventoryService;
+import com.edacourse.api.inventory.domain.repository.InventoryRepository;
+import com.edacourse.api.inventory.infrastructure.persistence.InMemoryInventoryRepository;
+import com.edacourse.api.inventory.infrastructure.subscriber.InventorySubscriber;
+import com.edacourse.api.notification.application.service.NotificationService;
+import com.edacourse.api.notification.infrastructure.subscriber.NotificationSubscriber;
+import com.edacourse.api.order.interfaces.rest.OrderResource;
+import com.edacourse.api.order.interfaces.sse.OrderSseResource;
+import com.edacourse.api.order.interfaces.sse.SseBridgeSubscriber;
+import com.edacourse.api.payment.application.service.PaymentService;
+import com.edacourse.api.payment.domain.repository.PaymentRepository;
+import com.edacourse.api.payment.infrastructure.persistence.InMemoryPaymentRepository;
+import com.edacourse.api.payment.infrastructure.subscriber.PaymentSubscriber;
+import com.edacourse.api.search.application.service.SearchService;
+import com.edacourse.api.search.infrastructure.subscriber.SearchSubscriber;
+import com.edacourse.api.shared.config.AppBinder;
+import com.edacourse.api.shared.config.ObjectMapperProvider;
+import com.edacourse.api.shared.infrastructure.messaging.DeadLetterHandler;
+import com.edacourse.api.shared.infrastructure.messaging.EventBus;
+import com.edacourse.api.shared.infrastructure.messaging.EventBusFactory;
+import com.edacourse.api.shared.infrastructure.serialization.EventSerializer;
+import com.edacourse.api.shared.infrastructure.serialization.JsonEventSerializer;
+import com.edacourse.api.shipping.application.service.ShippingService;
+import com.edacourse.api.shipping.domain.repository.ShipmentRepository;
+import com.edacourse.api.shipping.infrastructure.persistence.InMemoryShipmentRepository;
+import com.edacourse.api.shipping.infrastructure.subscriber.ShippingSubscriber;
 
 public class Application {
-
 	private static final String BASE_URI = "http://0.0.0.0:8080/";
 
-	public static void main(String[] args) throws InterruptedException {
-		System.out.println("Application started at " + BASE_URI);
-
+	public static void main(String[] args) throws Exception {
+		// Shared infrastructure
 		EventSerializer serializer = new JsonEventSerializer();
-		// EventBus eventBus = new KafkaEventBus(serializer);
-		AdvancedEventBus eventBus = new RabbitMQEventBus(serializer);
-		OrderSseResource orderSseResource = new OrderSseResource();
-		InventoryService inventoryService = new InventoryService(eventBus);
-		PaymentService paymentService = new PaymentService(eventBus);
-		NotificationService notificationService = new NotificationService();
-		AnalyticsService analyticsService = new AnalyticsService();
+		EventBus eventBus = EventBusFactory.create(serializer);
 
+		// Order context — interfaces
+		OrderSseResource sseResource = new OrderSseResource();
+
+		// Inventory context
+		InventoryRepository inventoryRepo = new InMemoryInventoryRepository();
+		InventoryService inventoryService = new InventoryService(eventBus, inventoryRepo);
+		new InventorySubscriber(eventBus, inventoryService);
+
+		// Payment context
+		PaymentRepository paymentRepo = new InMemoryPaymentRepository();
+		PaymentService paymentService = new PaymentService(eventBus, paymentRepo);
+		new PaymentSubscriber(eventBus, paymentService);
+
+		// Shipping context
+		ShipmentRepository shipmentRepo = new InMemoryShipmentRepository();
+		ShippingService shippingService = new ShippingService(eventBus, shipmentRepo);
+		new ShippingSubscriber(eventBus, shippingService);
+
+		// Notification context
+		NotificationService notificationService = new NotificationService();
+		new NotificationSubscriber(eventBus, notificationService);
+
+		// Catalog context
+		ProductRepository productRepo = new SqlServerProductRepository();
+		CatalogService catalogService = new CatalogService(productRepo);
+
+		// Search context
+		SearchService searchService = new SearchService();
+		new SearchSubscriber(eventBus, searchService);
+
+		// CDC
+		CdcStrategy cdcStrategy = new NativeCdcStrategy(eventBus, serializer);
+		cdcStrategy.start();
+
+		// SSE bridge
+		new SseBridgeSubscriber(eventBus, serializer, sseResource);
+
+		// DLQ handler (if broker supports it)
+		if (eventBus instanceof DeadLetterHandler dlh) {
+			dlh.onDeadLetter("orders.created", String.class,
+					event -> System.err.println("[DLQ] Mensaje perdido en orders.created: " + event));
+		}
+
+		// Jersey HTTP server
 		ResourceConfig config = new ResourceConfig()
-				.register(new AppBinder(serializer, eventBus,
-						orderSseResource))
+				.register(new AppBinder(serializer, eventBus, sseResource, catalogService))
 				.register(JacksonFeature.class)
 				.register(ObjectMapperProvider.class)
 				.register(OrderResource.class)
-				.register(orderSseResource);
-
-		new InventorySubscriber(eventBus, inventoryService);
-		new PaymentSubscriber(eventBus, paymentService);
-		new NotificationSubscriber(eventBus, notificationService);
-		new SseBridgeSubscriber(eventBus, serializer, orderSseResource);
-		new AnalyticsSubscriber(eventBus, analyticsService);
-
-		new DlqSubscriber(eventBus);
+				.register(CatalogResource.class);
 
 		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);
 
+		System.out.println("=== EventFlow Platform iniciada ===");
+		System.out.println("Broker: " + eventBus.getClass().getSimpleName());
+		System.out.println("Contextos: Order, Inventory, Payment, Shipping, Notification, Catalog, Search");
+		System.out.println("REST: " + BASE_URI + "api/orders");
+		System.out.println("REST: " + BASE_URI + "api/products");
+		System.out.println("SSE:  " + BASE_URI + "api/orders/events");
+
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			System.out.println("Shutting down server...");
+			System.out.println("Apagando EventFlow...");
 			server.shutdownNow();
 			eventBus.close();
 		}));
 
 		Thread.currentThread().join();
 	}
-
-	/*
-	 * public static void main(String[] args) {
-	 * try {
-	 * Container container = new Container();
-	 * container.register(NotificationService.class, ConsoleNotification.class);
-	 * container.register(PromotionService.class,
-	 * TenPercentDiscountPromotion.class);
-	 * container.register(OrderService.class, OrderService.class);
-	 * // container.register(EventBus.class, RabbitMQEventBusEventBus.class);
-	 * // container.register(EventBus.class, KafkaEventBus.class);
-	 * container.register(EventBus.class, InMemoryEventBus.class);
-	 * container.register(EventSerializer.class, JsonEventSerializer.class);
-	 * 
-	 * Thread.sleep(20000);
-	 * 
-	 * EventBus eventBus = container.resolve(EventBus.class);
-	 * eventBus.subscribe("order.created", OrderEvent.class, event -> {
-	 * System.out.println("Evento recibido: " + event);
-	 * });
-	 * 
-	 * OrderService orderService = container.resolve(OrderService.class);
-	 * orderService.createOrder("Laptop", 10.99);
-	 * orderService.createOrder("Smartphone", 20.49);
-	 * orderService.createOrder("Tablet", 15.75);
-	 * 
-	 * Thread.sleep(10000);
-	 * 
-	 * eventBus.close();
-	 * } catch (Exception e) {
-	 * e.printStackTrace();
-	 * System.out.println("Fallo");
-	 * }
-	 * 
-	 * }
-	 */
 }
