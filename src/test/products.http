@@ -1,0 +1,14 @@
+@baseUrl = http://localhost:8090/api/products
+
+
+POST {{baseUrl}}
+content-type: application/json
+
+{
+	"name":"Laptop",
+	"description":"Laptop con RTX 4070",
+	"price": 1399.99,
+	"category": "Electronics", 
+	"stock": 50
+}
+

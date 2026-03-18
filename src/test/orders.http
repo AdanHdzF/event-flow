@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:8080/api/orders/
+@baseUrl = http://localhost:8090/api/orders/
 
 
 POST {{baseUrl}}
