@@ -1,10 +1,11 @@
 package com.edacourse.pubsub.channel.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class MessageResponse {
-	private long id;
+	private String id;
 
 	@JsonProperty("channel_id")
 	private String channelId;
@@ -16,7 +17,7 @@ public class MessageResponse {
 	@JsonProperty("published_at")
 	private Instant publishedAt;
 
-	public MessageResponse(long id, String channelId, String payload, String publisherId, Instant publishedAt) {
+	public MessageResponse(String id, String channelId, String payload, String publisherId, Instant publishedAt) {
 		this.id = id;
 		this.channelId = channelId;
 		this.payload = payload;
@@ -24,11 +25,11 @@ public class MessageResponse {
 		this.publishedAt = publishedAt;
 	}
 
-	public long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
