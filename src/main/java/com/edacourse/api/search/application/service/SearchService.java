@@ -1,25 +1,18 @@
 package com.edacourse.api.search.application.service;
 
 import java.time.Instant;
+import java.util.List;
 
-import com.edacourse.api.search.infrastructure.opensearch.EmbeddingGenerator;
-import com.edacourse.api.search.infrastructure.opensearch.SearchRepository;
+import com.edacourse.api.search.domain.model.SearchResult;
+import com.edacourse.api.search.domain.model.SearchableProduct;
+import com.edacourse.api.search.domain.repository.ProductSearchRepository;
 
-/**
- * Servicio de busqueda de productos.
- * Por ahora solo registra los cambios detectados.
- * Se integrara con OpenSearch para indexacion y busqueda.
- */
 public class SearchService {
 
-	private final SearchRepository searchRepository;
-	private final EmbeddingGenerator embeddingGenerator;
-	private final String indexName;
+	private final ProductSearchRepository searchRepository;
 
-	public SearchService(SearchRepository searchRepository, EmbeddingGenerator embeddingGenerator, String indexName) {
+	public SearchService(ProductSearchRepository searchRepository) {
 		this.searchRepository = searchRepository;
-		this.embeddingGenerator = embeddingGenerator;
-		this.indexName = indexName;
 	}
 
 	public void indexProduct(String productId, String name, String description,
@@ -27,123 +20,20 @@ public class SearchService {
 		System.out.println("[SEARCH] " + operation + " -> " + productId +
 				" | " + name + " | $" + price + " | stock=" + stock + " | cat=" + category);
 
-		String textForEmbedding = name + " " + description + " " + category;
-		float[] embedding = embeddingGenerator.generate(textForEmbedding);
-
-		String doc = """
-				{
-				    "productId": "%s",
-				    "name": "%s",
-				    "description": "%s",
-				    "price": %.2f,
-				    "category": "%s",
-				    "stock": %d,
-				    "embedding": %s,
-				    "indexed_at": "%s"
-				}
-				""".formatted(
-				escape(productId), escape(name), escape(description),
-				price, escape(category), stock,
-				embeddingGenerator.toJsonArray(embedding),
-				Instant.now().toString());
-
-		String response = searchRepository.put("/" + indexName + "/_doc/" + productId, doc);
+		SearchableProduct product = new SearchableProduct(
+				productId, name, description, price, category, stock, Instant.now());
+		searchRepository.index(product);
 	}
 
-	public String searchFullText(String query) {
-		String body = """
-				{
-				    "query": {
-				        "multi_match": {
-				            "query": "%s",
-				            "fields": ["name^3", "description^2", "category"],
-				            "fuzziness": "AUTO"
-				        }
-				    },
-				    "size": 10
-				}
-				""".formatted(escape(query));
-		return searchRepository.post("/" + indexName + "/_search", body);
+	public List<SearchResult> searchFullText(String query) {
+		return searchRepository.searchByText(query, 10);
 	}
 
-	public String searchSemantic(String query) {
-		float[] queryEmbedding = embeddingGenerator.generate(query);
-		String body = """
-				{
-				    "size": 10,
-				    "query": {
-				        "knn": {
-				            "embedding": {
-				                "vector": %s,
-				                "k": 10
-				            }
-				        }
-				    }
-				}
-				""".formatted(embeddingGenerator.toJsonArray(queryEmbedding));
-		return searchRepository.post("/" + indexName + "/_search", body);
+	public List<SearchResult> searchSemantic(String query) {
+		return searchRepository.searchBySemantic(query, 10);
 	}
 
-	public String searchHybrid(String query) {
-		float[] queryEmbedding = embeddingGenerator.generate(query);
-		String body = """
-				{
-				    "size": 10,
-				    "query": {
-				        "bool": {
-				            "should": [
-				                {
-				                    "multi_match": {
-				                        "query": "%s",
-				                        "fields": ["name^3", "description^2", "category"],
-				                        "fuzziness": "AUTO",
-				                        "boost": 1.0
-				                    }
-				                },
-				                {
-				                    "knn": {
-				                        "embedding": {
-				                            "vector": %s,
-				                            "k": 5
-				                        }
-				                    }
-				                }
-				            ]
-				        }
-				    }
-				}
-				""".formatted(escape(query), embeddingGenerator.toJsonArray(queryEmbedding));
-		return searchRepository.post("/" + indexName + "/_search", body);
+	public List<SearchResult> searchHybrid(String query) {
+		return searchRepository.searchHybrid(query, 10);
 	}
-
-	private Object escape(String name) {
-		if (name == null) {
-			return "";
-		}
-
-		StringBuilder escaped = new StringBuilder(name.length() + 16);
-
-		for (int i = 0; i < name.length(); i++) {
-			char c = name.charAt(i);
-			switch (c) {
-				case '\"' -> escaped.append("\\\"");
-				case '\\' -> escaped.append("\\\\");
-				case '\b' -> escaped.append("\\b");
-				case '\f' -> escaped.append("\\f");
-				case '\n' -> escaped.append("\\n");
-				case '\r' -> escaped.append("\\r");
-				case '\t' -> escaped.append("\\t");
-				default -> {
-					if (c < 0x20) {
-						escaped.append(String.format("\\u%04x", (int) c));
-					} else {
-						escaped.append(c);
-					}
-				}
-			}
-		}
-
-		return escaped.toString().replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
-	}
-
 }
