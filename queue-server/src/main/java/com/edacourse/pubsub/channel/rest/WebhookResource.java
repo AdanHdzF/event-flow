@@ -30,7 +30,7 @@ public class WebhookResource {
 		if (!isValid) {
 			return Response.status(401).build();
 		}
-		System.out.println("[RECEIVER] Canal=" + channel
+		System.out.println("[*** RECEIVER - QUEUE-SERVER ***] Canal=" + channel
 				+ " Payload=" + body);
 		return Response.ok().build();
 	}
