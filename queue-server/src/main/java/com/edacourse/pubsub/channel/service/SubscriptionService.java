@@ -47,6 +47,6 @@ public class SubscriptionService {
 	}
 
 	public String generateSecret() {
-		return UUID.randomUUID().toString().replaceAll("-", "").substring(0, 32);
+		return UUID.randomUUID().toString().replace("-", "").substring(0, 32);
 	}
 }

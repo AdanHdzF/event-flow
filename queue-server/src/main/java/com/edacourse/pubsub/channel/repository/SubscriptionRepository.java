@@ -12,5 +12,7 @@ public interface SubscriptionRepository {
 
 	List<Subscription> findByChannelId(String channelId);
 
+	List<Subscription> findActiveByChannelName(String channelName);
+
 	void deactivate(String id);
 }
