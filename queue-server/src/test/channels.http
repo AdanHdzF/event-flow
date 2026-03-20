@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:8091/api/
+
+
+POST {{baseUrl}}channels/
+content-type: application/json
+
+{
+  "name": "demo",
+  "description": "A channel for testing purposes"
+}
+
+###
+
+POST {{baseUrl}}subscriptions/channels/demo
+content-type: application/json
+
+{
+	"webhook_url": "https://9x1n96dg-8091.usw3.devtunnels.ms/webhook",
+	"description": "A subscription for testing purposes"
+}
+
+###
+
+GET {{baseUrl}}/channels/demo/publish
+content-type: application/json
+
