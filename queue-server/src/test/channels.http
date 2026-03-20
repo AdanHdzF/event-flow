@@ -5,13 +5,14 @@ POST {{baseUrl}}channels/
 content-type: application/json
 
 {
-  "name": "demo",
+  "name": "demo2",
   "description": "A channel for testing purposes"
 }
 
+
 ###
 
-POST {{baseUrl}}subscriptions/channels/demo
+POST {{baseUrl}}subscriptions/channels/demo2
 content-type: application/json
 
 {
@@ -21,6 +22,10 @@ content-type: application/json
 
 ###
 
-GET {{baseUrl}}/channels/demo/publish
+POST {{baseUrl}}channels/demo2/publish
 content-type: application/json
 
+{
+	"publisher_id": "test-publisher",
+	"payload": "test-payload-4"
+}

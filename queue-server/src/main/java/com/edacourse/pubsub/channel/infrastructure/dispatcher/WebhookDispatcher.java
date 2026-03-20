@@ -7,6 +7,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -93,12 +94,12 @@ public class WebhookDispatcher implements AutoCloseable {
 	}
 
 	private void dispatchToSubscribers(String channelName, String payload, String messageId) {
-		Channel channel = channelRepo.findByName(channelName);
-		if (channel == null) {
+		Optional<Channel> channel = channelRepo.findByName(channelName);
+		if (channel.isEmpty()) {
 			System.out.println("[DISPATCHER] Canal '" + channelName + "' no encontrado");
 			return;
 		}
-		List<Subscription> subscribers = subscriptionRepo.findActiveByChannelId(channel.getId());
+		List<Subscription> subscribers = subscriptionRepo.findActiveByChannelId(channel.get().getId());
 		if (subscribers.isEmpty()) {
 			System.out.println("[DISPATCHER] Sin suscriptores activos para canal '" + channelName + "'");
 			return;
