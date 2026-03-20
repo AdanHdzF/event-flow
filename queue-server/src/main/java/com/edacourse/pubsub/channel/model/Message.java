@@ -24,40 +24,39 @@ public class Message {
 		return id;
 	}
 
-	public String getChannelId() {
-		return channelId;
-	}
-
-	public String getPayload() {
-		return payload;
-	}
-
-	public String getPublisherId() {
-		return publisherId;
-	}
-
-	public Instant getPublishedAt() {
-		return publishedAt;
-	}
-
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getChannelId() {
+		return channelId;
 	}
 
 	public void setChannelId(String channelId) {
 		this.channelId = channelId;
 	}
 
+	public String getPayload() {
+		return payload;
+	}
+
 	public void setPayload(String payload) {
 		this.payload = payload;
+	}
+
+	public String getPublisherId() {
+		return publisherId;
 	}
 
 	public void setPublisherId(String publisherId) {
 		this.publisherId = publisherId;
 	}
 
+	public Instant getPublishedAt() {
+		return publishedAt;
+	}
+
 	public void setPublishedAt(Instant publishedAt) {
 		this.publishedAt = publishedAt;
 	}
-
 }

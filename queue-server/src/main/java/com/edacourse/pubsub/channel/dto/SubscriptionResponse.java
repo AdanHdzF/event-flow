@@ -1,17 +1,13 @@
 package com.edacourse.pubsub.channel.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SubscriptionResponse {
 	private String id;
-
-	@JsonProperty("channel_id")
 	private String channelId;
-
-	@JsonProperty("webhook_url")
 	private String webhookUrl;
-
 	private String description;
 	private boolean active;
 	private String secret;

@@ -21,9 +21,9 @@ public class ChannelService {
 		}
 
 		Channel channel = new Channel();
-		channel.setId(generateChannelId());
 		channel.setName(name);
 		channel.setDescription(description);
+		channel.setId(generateChannelId());
 
 		return channelRepository.save(channel);
 	}

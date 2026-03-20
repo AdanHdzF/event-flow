@@ -22,8 +22,8 @@ public class SubscriptionService {
 				.orElseThrow(() -> new IllegalArgumentException("Channel not found"));
 
 		Subscription subscription = new Subscription();
-		subscription.setId(generateSubscriptionId());
 		subscription.setChannelId(channel.getId());
+		subscription.setId(generateSubscriptionId());
 		subscription.setWebhookUrl(webhookUrl);
 		subscription.setSecret(generateSecret());
 		subscription.setDescription(description);

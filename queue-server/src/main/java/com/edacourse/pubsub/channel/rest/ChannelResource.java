@@ -2,8 +2,8 @@ package com.edacourse.pubsub.channel.rest;
 
 import java.util.List;
 
-import com.edacourse.pubsub.channel.dto.ChannelRequest;
 import com.edacourse.pubsub.channel.dto.ChannelResponse;
+import com.edacourse.pubsub.channel.dto.CreateChannelRequest;
 import com.edacourse.pubsub.channel.model.Channel;
 import com.edacourse.pubsub.channel.service.ChannelService;
 import com.edacourse.pubsub.channel.service.SubscriptionService;
@@ -29,7 +29,8 @@ public class ChannelResource {
 	private SubscriptionService subscriptionService;
 
 	@POST
-	public Response createChannel(ChannelRequest request) {
+	public Response createChannel(CreateChannelRequest request) {
+		System.out.println("Creando canal: " + request.getName());
 		try {
 			int initialSubscribers = 0;
 			Channel channel = channelService.createChannel(request.getName(), request.getDescription());

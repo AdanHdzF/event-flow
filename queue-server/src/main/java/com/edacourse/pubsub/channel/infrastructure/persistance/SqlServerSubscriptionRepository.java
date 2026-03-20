@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +32,7 @@ public class SqlServerSubscriptionRepository implements SubscriptionRepository {
 	public Subscription save(Subscription subscription) {
 		String sql = "INSERT INTO subscriptions (id, channel_id, webhook_url, secret, description) VALUES (?, ?, ?, ?,?)";
 		try (Connection conn = getConnection();
-				PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+				PreparedStatement ps = conn.prepareStatement(sql)) {
 			ps.setString(1, subscription.getId());
 			ps.setString(2, subscription.getChannelId());
 			ps.setString(3, subscription.getWebhookUrl());
@@ -74,7 +73,6 @@ public class SqlServerSubscriptionRepository implements SubscriptionRepository {
 		return queryByChannelId(sql, channelId);
 	}
 
-	@Override
 	public List<Subscription> findActiveByChannelId(String channelId) {
 		String sql = "SELECT id, channel_id, webhook_url, secret, description, active, created_at FROM subscriptions WHERE channel_id = ? AND active = 1";
 		return queryByChannelId(sql, channelId);

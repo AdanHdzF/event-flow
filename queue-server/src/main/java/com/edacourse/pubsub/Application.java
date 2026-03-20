@@ -25,9 +25,9 @@ import com.edacourse.pubsub.channel.service.PublishService;
 import com.edacourse.pubsub.channel.service.SubscriptionService;
 
 public class Application {
-	private static final String BASE_URI = "http://0.0.0.0:8080/";
+	private static final String BASE_URL = "http://0.0.0.0:8080";
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws InterruptedException {
 		EventBus eventBus = new KafkaEventBus();
 		ChannelRepository channelRepository = new SqlServerChannelRepository();
 		MessageRepository messageRepository = new SqlServerMessageRepository();
@@ -40,15 +40,14 @@ public class Application {
 		ResourceConfig config = new ResourceConfig()
 				.register(new AppBinder(channelService, subscriptionService, publishService))
 				.register(JacksonFeature.class)
+				.register(ObjectMapperProvider.class)
 				.register(PublishResource.class)
 				.register(ChannelResource.class)
-				.register(SubscriptionResource.class)
-				.register(ObjectMapperProvider.class);
+				.register(SubscriptionResource.class);
 
-		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);
-
-		System.out.println("=== EventFlow Platform iniciada ===");
-		System.out.println("REST: " + BASE_URI + "api/channels");
+		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URL), config);
+		System.out.println("Servidor corriendo en: " + BASE_URL);
+		System.out.println("REST: " + BASE_URL + "/api/channels");
 
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			System.out.println("Apagando PubSub Server...");

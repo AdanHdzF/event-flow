@@ -1,7 +1,8 @@
 package com.edacourse.pubsub.channel.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ChannelResponse {
 	private String id;

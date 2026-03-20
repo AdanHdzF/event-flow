@@ -25,8 +25,8 @@ public class PublishService {
 				.orElseThrow(() -> new IllegalArgumentException("Channel not found"));
 
 		Message message = new Message();
-		message.setId(generateMessageId());
 		message.setChannelId(channel.getId());
+		message.setId(generateMessageId());
 		message.setPayload(payload);
 		message.setPublisherId(publisherId);
 		Message savedMessage = messageRepository.save(message);

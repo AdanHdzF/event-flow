@@ -8,6 +8,9 @@ public class SubscribeRequest {
 
 	private String description;
 
+	public SubscribeRequest() {
+	}
+
 	public SubscribeRequest(String webhookUrl, String description) {
 		this.webhookUrl = webhookUrl;
 		this.description = description;

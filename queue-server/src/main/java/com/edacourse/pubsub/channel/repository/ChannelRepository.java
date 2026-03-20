@@ -1,8 +1,9 @@
 package com.edacourse.pubsub.channel.repository;
 
-import com.edacourse.pubsub.channel.model.Channel;
 import java.util.List;
 import java.util.Optional;
+
+import com.edacourse.pubsub.channel.model.Channel;
 
 public interface ChannelRepository {
 	Channel save(Channel channel);

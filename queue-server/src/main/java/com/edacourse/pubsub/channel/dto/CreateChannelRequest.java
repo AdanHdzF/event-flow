@@ -4,6 +4,9 @@ public class CreateChannelRequest {
 	private String name;
 	private String description;
 
+	public CreateChannelRequest() {
+	}
+
 	public CreateChannelRequest(String name, String description) {
 		this.name = name;
 		this.description = description;

@@ -71,7 +71,9 @@ public class SqlServerChannelRepository implements ChannelRepository {
 			}
 			return Optional.empty();
 		} catch (SQLException e) {
-			throw new RuntimeException("Error finding channel by name", e);
+			System.out.println("Error finding channel by name: " + e.getMessage());
+			// throw new RuntimeException("Error finding channel by name", e);
+			return Optional.empty();
 		}
 	}
 

@@ -1,8 +1,8 @@
 package com.edacourse.pubsub.channel.repository;
 
-import com.edacourse.pubsub.channel.model.Message;
-
 import java.util.List;
+
+import com.edacourse.pubsub.channel.model.Message;
 
 public interface MessageRepository {
 	Message save(Message message);

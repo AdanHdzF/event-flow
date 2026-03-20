@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,18 +31,13 @@ public class SqlServerMessageRepository implements MessageRepository {
 	public Message save(Message message) {
 		String sql = "INSERT INTO messages (id, channel_id, payload, publisher_id) VALUES (?, ?, ?, ?)";
 		try (Connection conn = getConnection();
-				PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+				PreparedStatement ps = conn.prepareStatement(sql)) {
 			ps.setString(1, message.getId());
 			ps.setString(2, message.getChannelId());
 			ps.setString(3, message.getPayload());
 			ps.setString(4, message.getPublisherId());
 			ps.executeUpdate();
 
-			try (ResultSet keys = ps.getGeneratedKeys()) {
-				if (keys.next()) {
-					message.setId(keys.getString(1));
-				}
-			}
 			System.out.println("[PUBSUB] Mensaje guardado: id=" + message.getId() + " canal=" + message.getChannelId());
 			return message;
 		} catch (SQLException e) {

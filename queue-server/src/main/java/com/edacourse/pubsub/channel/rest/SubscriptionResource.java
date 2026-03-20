@@ -19,6 +19,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+@Path("/api/subscriptions")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SubscriptionResource {
@@ -29,7 +30,7 @@ public class SubscriptionResource {
 	private ChannelService channelService;
 
 	@POST
-	@Path("/api/channels/{name}/subscribe")
+	@Path("/channels/{name}")
 	public Response subscribe(@PathParam("name") String channelName, SubscribeRequest request) {
 		if (request.getWebhookUrl() == null || request.getWebhookUrl().isBlank()) {
 			return Response.status(Response.Status.BAD_REQUEST)
@@ -50,7 +51,7 @@ public class SubscriptionResource {
 	}
 
 	@GET
-	@Path("/api/channels/{name}/subscribers")
+	@Path("/channels/{name}/subscribers")
 	public Response listSubscribers(@PathParam("name") String channelName) {
 		return channelService.getChannel(channelName)
 				.map(channel -> {
@@ -66,7 +67,7 @@ public class SubscriptionResource {
 	}
 
 	@DELETE
-	@Path("/api/subscriptions/{id}")
+	@Path("/{id}")
 	public Response unsubscribe(@PathParam("id") String subscriptionId) {
 		try {
 			subscriptionService.unsubscribe(subscriptionId);

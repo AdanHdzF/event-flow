@@ -3,29 +3,32 @@ package com.edacourse.pubsub.channel.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PublishRequest {
-    private String payload;
+	private String payload;
 
-    @JsonProperty("publisher_id")
-    private String publisherId;
+	@JsonProperty("publisher_id")
+	private String publisherId;
 
-    public PublishRequest(String payload, String publisherId) {
-        this.payload = payload;
-        this.publisherId = publisherId;
-    }
+	public PublishRequest() {
+	}
 
-    public String getPayload() {
-        return payload;
-    }
+	public PublishRequest(String payload, String publisherId) {
+		this.payload = payload;
+		this.publisherId = publisherId;
+	}
 
-    public void setPayload(String payload) {
-        this.payload = payload;
-    }
+	public String getPayload() {
+		return payload;
+	}
 
-    public String getPublisherId() {
-        return publisherId;
-    }
+	public void setPayload(String payload) {
+		this.payload = payload;
+	}
 
-    public void setPublisherId(String publisherId) {
-        this.publisherId = publisherId;
-    }
+	public String getPublisherId() {
+		return publisherId;
+	}
+
+	public void setPublisherId(String publisherId) {
+		this.publisherId = publisherId;
+	}
 }
