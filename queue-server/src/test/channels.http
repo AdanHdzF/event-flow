@@ -1,11 +1,15 @@
-@baseUrl = http://localhost:8091/api/
+#@baseUrl = http://localhost:8091/api/
+@baseUrl = https://localhost:8243/pubsub/1.0.0/api/
+@jwt = eyJ4N...
+@headerAuth = Bearer {{jwt}}
 
 
 POST {{baseUrl}}channels/
 content-type: application/json
+Authorization: {{headerAuth}}
 
 {
-  "name": "demo2",
+  "name": "demo222",
   "description": "A channel for testing purposes"
 }
 
@@ -14,6 +18,7 @@ content-type: application/json
 
 POST {{baseUrl}}subscriptions/channels/demo2
 content-type: application/json
+Authorization: {{headerAuth}}
 
 {
 	"webhook_url": "https://9x1n96dg-8091.usw3.devtunnels.ms/webhook",
@@ -24,8 +29,9 @@ content-type: application/json
 
 POST {{baseUrl}}channels/demo2/publish
 content-type: application/json
+Authorization: {{headerAuth}}
 
 {
 	"publisher_id": "test-publisher",
-	"payload": "test-payload-4"
+	"payload": "test-payload-6"
 }
