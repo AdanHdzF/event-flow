@@ -16,6 +16,19 @@ public class SseEventBridge {
 				e -> broadcast("order.created", "orders", e), "sse-bridge-all");
 		eventBus.subscribe("orders.canceled", Object.class,
 				e -> broadcast("order.canceled", "orders", e), "sse-bridge-all");
+
+		eventBus.subscribe("inventory.reserved", Object.class,
+				e -> broadcast("inventory.reserved", "inventory", e), "sse-bridge-all");
+		eventBus.subscribe("inventory.stock-low", Object.class,
+				e -> broadcast("inventory.stock-low", "inventory", e), "sse-bridge-all");
+		eventBus.subscribe("inventory.insufficient", Object.class,
+				e -> broadcast("inventory.insufficient", "inventory", e), "sse-bridge-all");
+
+		eventBus.subscribe("payment.completed", Object.class,
+				e -> broadcast("payment.completed", "payment", e), "sse-bridge-all");
+
+		eventBus.subscribe("shipping.shipped", Object.class,
+				e -> broadcast("shipping.shipped", "shipping", e), "sse-bridge-all");
 	}
 
 	private void broadcast(String eventType, String topic, Object event) {
