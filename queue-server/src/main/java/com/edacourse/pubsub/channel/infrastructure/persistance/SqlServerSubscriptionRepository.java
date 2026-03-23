@@ -79,8 +79,13 @@ public class SqlServerSubscriptionRepository implements SubscriptionRepository {
 	}
 
 	public List<Subscription> findActiveByChannelName(String channelName) {
-		String sql = "SELECT id, channel_id, webhook_url, secret, description, active, created_at FROM subscriptions WHERE channel_name = ? AND active = 1";
+		String sql = "SELECT id, channel_id, webhook_url, secret, description, active, created_at FROM subscriptions WHERE channel_id = ? AND active = 1";
 		return queryByParams(sql, channelName);
+	}
+
+	public List<Subscription> findActiveByChannelIdWebhook(String channelId, String webhookUrl) {
+		String sql = "SELECT id, channel_id, webhook_url, secret, description, active, created_at FROM subscriptions WHERE channel_id = ? AND webhook_url = ? AND active = 1";
+		return queryByParams(sql, channelId, webhookUrl);
 	}
 
 	@Override
@@ -99,11 +104,13 @@ public class SqlServerSubscriptionRepository implements SubscriptionRepository {
 		}
 	}
 
-	private List<Subscription> queryByParams(String sql, String param) {
+	private List<Subscription> queryByParams(String sql, String... params) {
 		List<Subscription> subscriptions = new ArrayList<>();
 		try (Connection conn = getConnection();
 				PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setString(1, param);
+			for (int i = 0; i < params.length; i++) {
+				ps.setString(i + 1, params[i]);
+			}
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
 					subscriptions.add(mapRow(rs));

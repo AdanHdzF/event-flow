@@ -156,6 +156,7 @@ public class WebhookDispatcher implements AutoCloseable {
 				System.err.println("[DISPATCHER] Error conectando a " + sub.getWebhookUrl() + ": " + e.getMessage()
 						+ " — intento " + attempt + "/" + MAX_RETRIES);
 				logDelivery(messageId, sub, channelName, "RETRYING", 0, attempt, e.getMessage());
+				e.printStackTrace();
 			}
 
 			if (attempt < MAX_RETRIES) {
@@ -184,6 +185,7 @@ public class WebhookDispatcher implements AutoCloseable {
 			deliveryRepo.save(delivery);
 		} catch (Exception e) {
 			System.err.println("[DISPATCHER] Error logueando entrega: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -196,6 +198,7 @@ public class WebhookDispatcher implements AutoCloseable {
 			deliveryExecutor.awaitTermination(10, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
+			e.printStackTrace();
 		}
 		System.out.println("[DISPATCHER] Detenido");
 	}

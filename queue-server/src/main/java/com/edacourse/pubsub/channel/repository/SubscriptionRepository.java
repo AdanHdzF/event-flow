@@ -16,5 +16,7 @@ public interface SubscriptionRepository {
 
 	List<Subscription> findActiveByChannelName(String channelName);
 
+	List<Subscription> findActiveByChannelIdWebhook(String channelName, String webhookUrl);
+
 	void deactivate(String id);
 }

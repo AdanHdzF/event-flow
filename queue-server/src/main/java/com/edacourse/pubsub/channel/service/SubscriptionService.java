@@ -21,6 +21,12 @@ public class SubscriptionService {
 		Channel channel = channelRepository.findByName(channelName)
 				.orElseThrow(() -> new IllegalArgumentException("Channel not found"));
 
+		List<Subscription> existingSubscriptions = subscriptionRepository.findActiveByChannelIdWebhook(
+				channel.getId(),
+				webhookUrl);
+		if (!existingSubscriptions.isEmpty())
+			return existingSubscriptions.get(0);
+
 		Subscription subscription = new Subscription();
 		subscription.setChannelId(channel.getId());
 		subscription.setId(generateSubscriptionId());
