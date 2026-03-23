@@ -1,0 +1,13 @@
+@baseUrl = https://9x1n96dg-8090.usw3.devtunnels.ms/api/notifications
+#@baseUrl = http://localhost:8090/api/notifications
+
+
+GET {{baseUrl}}/demo1223
+content-type: application/json
+
+
+###
+
+GET {{baseUrl}}/demo99
+content-type: application/json
+
