@@ -1,24 +1,25 @@
+@baseUrl = https://9x1n96dg-8091.usw3.devtunnels.ms/api/
 #@baseUrl = http://localhost:8091/api/
-@baseUrl = https://localhost:8243/pubsub/1.0.0/api/
-@jwt = eyJ4N...
+#@baseUrl = https://localhost:8243/pubsub/1.0.0/api/
+@jwt = eyJ4NXQiOiJNekF6TVRGak9EUTFNRE5qT1RVMVpEQTROR1E1TURrell6RTNNV0k0TW1SbFpHVTNZelpqWWprNFpHUmtNMlJoTW1Jd01qQXhZekpsTUdKak5qZG1OdyIsImtpZCI6Ik16QXpNVEZqT0RRMU1ETmpPVFUxWkRBNE5HUTVNRGt6WXpFM01XSTRNbVJsWkdVM1l6WmpZams0WkdSa00yUmhNbUl3TWpBeFl6SmxNR0pqTmpkbU53X1JTMjU2IiwidHlwIjoiYXQrand0IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIzYTBkOTQ2NC1mMzhhLTQyNzItYmI0Zi03NTUwOGJkYmVkYWMiLCJhdXQiOiJBUFBMSUNBVElPTiIsImF1ZCI6IkFsMVNfanFrSXNYUjlIZXlXT3EwRUkzbHllTWEiLCJuYmYiOjE3NzQwMzg3MzMsImF6cCI6IkFsMVNfanFrSXNYUjlIZXlXT3EwRUkzbHllTWEiLCJzY29wZSI6ImRlZmF1bHQiLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo5NDQzL29hdXRoMi90b2tlbiIsImV4cCI6MTc3NDA0MjMzMywiaWF0IjoxNzc0MDM4NzMzLCJqdGkiOiJhNTRiNjAxMy00YjVjLTRhODgtOWI5MS04NjMxOWY3YWZmMTciLCJjbGllbnRfaWQiOiJBbDFTX2pxa0lzWFI5SGV5V09xMEVJM2x5ZU1hIn0.S7E6i-HcbEVhOD-8uF-Tuir0mSm1dfGx6sSndp1MabgDugSeveQ_i6mavQI7AaozJC7e36y_BiJrYDPu4zFnRSAVIiNIszuPx-tqd7_IF8r2yjT6zHVmUcFfrJnjPCFyWNiYYYwasNYSNm7WA2ll4dJC_Xsk0_sotI2UDWOwlrwxXq5I3e4EkuthxZiUz8Ixsr-sCcCFjTxk7XMo9noGhiM6NaW4U_QJfAZ-DrEBc1oa3mzMvhwGQmgbg8oJ7CTNZ3v56CFTUFNtGgctKrFTciVKkTVdDLuQODXc-748XJhx-3vDny0KLuaSZWygpLsUUKRPj-1ZSSLqoJ5U1qqa6Q
 @headerAuth = Bearer {{jwt}}
 
 
 POST {{baseUrl}}channels/
 content-type: application/json
-Authorization: {{headerAuth}}
+#Authorization: {{headerAuth}}
 
 {
-  "name": "demo222",
+  "name": "demo1223",
   "description": "A channel for testing purposes"
 }
 
 
 ###
 
-POST {{baseUrl}}subscriptions/channels/demo2
+POST {{baseUrl}}subscriptions/channels/demo1223
 content-type: application/json
-Authorization: {{headerAuth}}
+#Authorization: {{headerAuth}}
 
 {
 	"webhook_url": "https://9x1n96dg-8091.usw3.devtunnels.ms/webhook",
@@ -27,11 +28,22 @@ Authorization: {{headerAuth}}
 
 ###
 
-POST {{baseUrl}}channels/demo2/publish
+POST {{baseUrl}}channels/demo1223/publish
 content-type: application/json
-Authorization: {{headerAuth}}
+#Authorization: {{headerAuth}}
 
 {
 	"publisher_id": "test-publisher",
-	"payload": "test-payload-6"
+	"payload": "test-payload-5"
+}
+
+###
+
+POST {{baseUrl}}channels/demo99/publish
+content-type: application/json
+#Authorization: {{headerAuth}}
+
+{
+	"publisher_id": "test-publisher",
+	"payload": "test-3"
 }
