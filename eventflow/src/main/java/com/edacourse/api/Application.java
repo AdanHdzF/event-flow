@@ -18,7 +18,11 @@ import com.edacourse.api.inventory.domain.repository.InventoryRepository;
 import com.edacourse.api.inventory.infrastructure.persistence.InMemoryInventoryRepository;
 import com.edacourse.api.inventory.infrastructure.subscriber.InventorySubscriber;
 import com.edacourse.api.notification.application.service.NotificationService;
+import com.edacourse.api.notification.domain.repository.NotificationRepository;
+import com.edacourse.api.notification.infrastructure.persistence.InMemoryNotificationRepository;
 import com.edacourse.api.notification.infrastructure.subscriber.NotificationSubscriber;
+import com.edacourse.api.notification.interfaces.rest.NotificationResource;
+import com.edacourse.api.notification.interfaces.rest.WebhookResource;
 import com.edacourse.api.order.interfaces.rest.OrderResource;
 import com.edacourse.api.order.interfaces.sse.OrderSseResource;
 import com.edacourse.api.order.interfaces.sse.SseBridgeSubscriber;
@@ -33,6 +37,8 @@ import com.edacourse.api.search.infrastructure.opensearch.OpenSearchProductSearc
 import com.edacourse.api.search.infrastructure.opensearch.TrigramEmbeddingGenerator;
 import com.edacourse.api.search.infrastructure.subscriber.SearchSubscriber;
 import com.edacourse.api.search.interfaces.rest.SearchResource;
+import com.edacourse.api.security.HmacSigner;
+import com.edacourse.api.security.HmacSignerService;
 import com.edacourse.api.shared.config.AppBinder;
 import com.edacourse.api.shared.config.ObjectMapperProvider;
 import com.edacourse.api.shared.infrastructure.messaging.DeadLetterHandler;
@@ -72,7 +78,8 @@ public class Application {
 		new ShippingSubscriber(eventBus, shippingService);
 
 		// Notification context
-		NotificationService notificationService = new NotificationService();
+		NotificationRepository notificationRepo = new InMemoryNotificationRepository();
+		NotificationService notificationService = new NotificationService(notificationRepo);
 		new NotificationSubscriber(eventBus, notificationService);
 
 		// SQL Server connection
@@ -106,14 +113,18 @@ public class Application {
 					event -> System.err.println("[DLQ] Mensaje perdido en orders.created: " + event));
 		}
 
+		HmacSigner hmacSigner = new HmacSignerService();
+
 		// Jersey HTTP server
 		ResourceConfig config = new ResourceConfig()
-				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService))
+				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService, hmacSigner))
 				.register(JacksonFeature.class)
 				.register(ObjectMapperProvider.class)
 				.register(OrderResource.class)
 				.register(CatalogResource.class)
-				.register(SearchResource.class);
+				.register(SearchResource.class)
+				.register(NotificationResource.class)
+				.register(WebhookResource.class);
 
 		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);
 
@@ -123,6 +134,8 @@ public class Application {
 		System.out.println("REST: " + BASE_URI + "api/orders");
 		System.out.println("REST: " + BASE_URI + "api/products");
 		System.out.println("REST: " + BASE_URI + "api/search");
+		System.out.println("REST: " + BASE_URI + "api/notifications");
+		System.out.println("REST: " + BASE_URI + "api/webhook");
 		System.out.println("SSE:  " + BASE_URI + "api/orders/events");
 
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
