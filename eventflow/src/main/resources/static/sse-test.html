@@ -39,11 +39,37 @@
 				const topicClass = topic.split('.')[0] || topic;
 				const div = document.createElement('div');
 				div.className = 'event ' + topicClass;
+				const escapeHtml = (str) =>
+					str
+						.replace(/&/g, '&amp;')
+						.replace(/</g, '&lt;')
+						.replace(/>/g, '&gt;')
+						.replace(/"/g, '&quot;')
+						.replace(/'/g, '&#039;');
+
+				const baseType = (
+					eventType.split('.')[0] || 'default'
+				).toLowerCase();
+				const colorByType = {
+					order: '#2563eb',
+					inventory: '#059669',
+					payment: '#7c3aed',
+					shipping: '#ea580c',
+					default: '#475569',
+				};
+				const badgeColor = colorByType[baseType] || colorByType.default;
+
+				div.style.cssText =
+					'background:#0f172a;color:#e2e8f0;border:1px solid #1e293b;border-radius:10px;padding:12px;margin:10px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+
 				div.innerHTML = `
-                    <span class="time">${new Date().toLocaleTimeString()} | ID: ${event.lastEventId}</span>
-                    <br><span class="type">${eventType}</span> <span class="topic">[${topic}]</span>
-                    <div class="data">${data}</div>
-                `;
+					<div class="event-header" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+						<span class="time" style="color:#94a3b8;font-size:12px;">${new Date().toLocaleTimeString()} | ID: ${event.lastEventId || '-'}</span>
+						<span class="type" data-event-type="${eventType}" style="background:${badgeColor};color:#fff;font-size:12px;padding:2px 8px;border-radius:999px;">${eventType}</span>
+						<span class="topic" style="color:#22d3ee;font-size:12px;">[${topic}]</span>
+					</div>
+					<pre class="event-data" style="margin:0;background:#020617;border:1px solid #1e293b;border-radius:8px;padding:10px;overflow:auto;white-space:pre-wrap;color:#cbd5e1;">${escapeHtml(data)}</pre>
+				`;
 				eventsDiv.insertBefore(div, eventsDiv.firstChild);
 			}
 
