@@ -14,6 +14,7 @@ import com.edacourse.api.search.application.service.SearchService;
 import com.edacourse.api.security.HmacSigner;
 import com.edacourse.api.shared.infrastructure.messaging.EventBus;
 import com.edacourse.api.shared.infrastructure.serialization.EventSerializer;
+import com.edacourse.api.shared.infrastructure.sse.EventSseBroadcaster;
 
 import jakarta.inject.Singleton;
 
@@ -27,14 +28,18 @@ public class AppBinder extends AbstractBinder {
 
 	private final HmacSigner hmacSigner;
 
+	private final EventSseBroadcaster sseBroadcaster;
+
 	public AppBinder(EventSerializer serializer, EventBus eventBus, OrderSseResource sseResource,
-			CatalogService catalogService, SearchService searchService, HmacSigner hmacSigner) {
+			CatalogService catalogService, SearchService searchService, HmacSigner hmacSigner,
+			EventSseBroadcaster sseBroadcaster) {
 		this.serializer = serializer;
 		this.eventBus = eventBus;
 		this.sseResource = sseResource;
 		this.catalogService = catalogService;
 		this.searchService = searchService;
 		this.hmacSigner = hmacSigner;
+		this.sseBroadcaster = sseBroadcaster;
 	}
 
 	@Override
@@ -52,5 +57,7 @@ public class AppBinder extends AbstractBinder {
 		bind(NotificationService.class).to(NotificationService.class).in(Singleton.class);
 
 		bind(hmacSigner).to(HmacSigner.class);
+
+		bind(sseBroadcaster).to(EventSseBroadcaster.class);
 	}
 }
