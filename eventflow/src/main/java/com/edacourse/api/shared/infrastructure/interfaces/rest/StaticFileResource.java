@@ -17,13 +17,10 @@ public class StaticFileResource {
 	@Path("sse-test")
 	@Produces(MediaType.TEXT_HTML)
 	public Response sseTestPage() {
-
-		InputStream htmlStream = getClass().getClassLoader().getResourceAsStream("static/sse-test.html");
-		if (htmlStream == null) {
-			return Response.status(Response.Status.NOT_FOUND).entity("Archivo no encontrado").build();
+		InputStream html = getClass().getClassLoader().getResourceAsStream("static/sse-test.html");
+		if (html == null) {
+			return Response.status(404).entity("Page not found").build();
 		}
-
-		return Response.ok(htmlStream).build();
+		return Response.ok(html).build();
 	}
-
 }

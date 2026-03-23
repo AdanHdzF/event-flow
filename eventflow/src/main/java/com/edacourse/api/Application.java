@@ -148,6 +148,7 @@ public class Application {
 		System.out.println("REST: " + BASE_URI + "api/notifications");
 		System.out.println("REST: " + BASE_URI + "api/webhook");
 		System.out.println("SSE:  " + BASE_URI + "api/orders/events");
+		System.out.println("REST: " + BASE_URI + "api/events");
 
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			System.out.println("Apagando EventFlow...");

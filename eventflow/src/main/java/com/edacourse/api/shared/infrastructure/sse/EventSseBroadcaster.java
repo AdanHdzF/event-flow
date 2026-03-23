@@ -4,14 +4,14 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Singleton;
+import jakarta.ws.rs.sse.OutboundSseEvent;
 import jakarta.ws.rs.sse.Sse;
 import jakarta.ws.rs.sse.SseBroadcaster;
 import jakarta.ws.rs.sse.SseEventSink;
 
 @Singleton
 public class EventSseBroadcaster {
-
-	private SseBroadcaster broadcaster;
+	SseBroadcaster broadcaster;
 	private Sse sse;
 	private final AtomicLong eventCounter = new AtomicLong(0);
 	private final ConcurrentLinkedDeque<SseEventRecord> eventHistory = new ConcurrentLinkedDeque<>();
@@ -21,10 +21,9 @@ public class EventSseBroadcaster {
 		this.sse = sse;
 		this.broadcaster = sse.newBroadcaster();
 		this.broadcaster.onClose(sink -> {
-			System.out.println("Cliente desconectado: " + sink);
+			System.out.println("Broadcaster closed");
 		});
-
-		System.out.println("SSE Broadcaster inicializado");
+		System.out.println("Broadcaster initialized");
 	}
 
 	public boolean isReady() {
@@ -50,11 +49,11 @@ public class EventSseBroadcaster {
 		long id = eventCounter.incrementAndGet();
 		String eventId = String.valueOf(id);
 
-		OutboudSseEvent event = sse.newEventBuilder()
+		OutboundSseEvent event = sse.newEventBuilder()
 				.id(eventId)
 				.name(eventType)
-				.data(String.class, "{\"topic\":\"" + topic + "\",\"data\":\"" + data + "\"}")
-				.comment(topic)
+				.data(String.class, "{\"topic\":\"" + topic + "\",\"data\":" + data + "}")
+				.comment("topic: " + topic)
 				.build();
 
 		eventHistory.add(new SseEventRecord(eventId, eventType, topic, data));
@@ -79,14 +78,13 @@ public class EventSseBroadcaster {
 
 		int replayed = 0;
 		for (SseEventRecord record : eventHistory) {
-			long recordId = Long.parseLong(record.getId());
+			long recordId = Long.parseLong(record.id());
 			if (recordId > lastId) {
-				OutboudSseEvent event = sse.newEventBuilder()
-						.id(record.getId())
-						.name(record.getEventType())
-						.data(String.class,
-								"{\"topic\":\"" + record.getTopic() + "\",\"data\":\"" + record.getData() + "\"}")
-						.comment(record.getTopic())
+				OutboundSseEvent event = sse.newEventBuilder()
+						.id(record.id())
+						.name(record.eventType())
+						.data(String.class, "{\"topic\":\"" + record.topic() + "\",\"data\":" + record.data() + "}")
+						.comment("topic: " + record.topic())
 						.build();
 				sink.send(event);
 				replayed++;
