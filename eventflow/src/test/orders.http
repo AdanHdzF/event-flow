@@ -6,10 +6,20 @@ content-type: application/json
 
 {
 	"customer_id": "customer-123",
-	"product": "demo-3",
-	"price": 10.99,
-	"quantity": 200
-
+	"items": [
+		{
+			"product_id": "demo-1",
+			"product_name": "Demo Product 1",
+			"price": 19.99,
+			"quantity": 2
+		},
+		{
+			"product_id": "demo-2",
+			"product_name": "Demo Product 2",
+			"price": 5.99,
+			"quantity": 1
+		}
+	]
 }
 
 
