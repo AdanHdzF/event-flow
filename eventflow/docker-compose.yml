@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  app:
+  api:
     image: eventflow
-    container_name: eventflow-app
+    container_name: eventflow-api
     ports:
       - "8090:8080"
     environment:
@@ -27,6 +27,14 @@ services:
         condition: service_completed_successfully
       opensearch:
         condition: service_healthy
+
+  frontend:
+    image: eventflow-frontend
+    container_name: eventflow-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
 
   sqlserver-init:
     image: mcr.microsoft.com/mssql/server:2022-latest
