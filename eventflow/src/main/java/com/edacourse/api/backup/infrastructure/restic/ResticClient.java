@@ -49,11 +49,11 @@ public class ResticClient {
 				System.out.println("[RESTIC] Backup completado. Snapshot: " + snapshotId);
 				return snapshotId;
 			} else {
-				System.out.println("[RESTIC] Error al inicializar repositorio: " + output);
+				System.out.println("[RESTIC] Error en backup: " + output);
 				return null;
 			}
 		} catch (Exception e) {
-			System.err.println("[RESTIC] Error al inicializar: " + e.getMessage());
+			System.err.println("[RESTIC] Error en backup: " + e.getMessage());
 			return null;
 		}
 	}

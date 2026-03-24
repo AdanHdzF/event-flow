@@ -2,6 +2,8 @@ package com.edacourse.api.shared.config;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 
+import com.edacourse.api.backup.application.BackupService;
+import com.edacourse.api.backup.application.DataSeeder;
 import com.edacourse.api.catalog.application.service.CatalogService;
 import com.edacourse.api.notification.application.service.NotificationService;
 import com.edacourse.api.notification.domain.repository.NotificationRepository;
@@ -22,17 +24,15 @@ public class AppBinder extends AbstractBinder {
 	private final EventSerializer serializer;
 	private final EventBus eventBus;
 	private final OrderSseResource sseResource;
-
 	private final CatalogService catalogService;
 	private final SearchService searchService;
-
 	private final HmacSigner hmacSigner;
-
 	private final EventSseBroadcaster sseBroadcaster;
+	private final BackupService backupService;
 
 	public AppBinder(EventSerializer serializer, EventBus eventBus, OrderSseResource sseResource,
 			CatalogService catalogService, SearchService searchService, HmacSigner hmacSigner,
-			EventSseBroadcaster sseBroadcaster) {
+			EventSseBroadcaster sseBroadcaster, BackupService backupService) {
 		this.serializer = serializer;
 		this.eventBus = eventBus;
 		this.sseResource = sseResource;
@@ -40,6 +40,7 @@ public class AppBinder extends AbstractBinder {
 		this.searchService = searchService;
 		this.hmacSigner = hmacSigner;
 		this.sseBroadcaster = sseBroadcaster;
+		this.backupService = backupService;
 	}
 
 	@Override
@@ -59,5 +60,8 @@ public class AppBinder extends AbstractBinder {
 		bind(hmacSigner).to(HmacSigner.class);
 
 		bind(sseBroadcaster).to(EventSseBroadcaster.class);
+
+		bind(backupService).to(BackupService.class).in(Singleton.class);
+		bind(DataSeeder.class).to(DataSeeder.class).in(Singleton.class);
 	}
 }

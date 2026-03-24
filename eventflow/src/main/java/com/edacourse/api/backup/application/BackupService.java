@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.time.Instant;
 import java.util.UUID;
 
 import com.edacourse.api.backup.domain.event.BackupCompletedEvent;
@@ -27,14 +26,14 @@ public class BackupService {
 	private final String dbUser;
 	private final String dbPassword;
 
-	public BackupService(EventBus eventBus, ResticClient resticClient, String exportDir,
-			String dbUrl, String dbUser, String dbPassword) {
+	public BackupService(EventBus eventBus, ResticClient resticClient) {
 		this.eventBus = eventBus;
 		this.resticClient = resticClient;
-		this.exportDir = exportDir;
-		this.dbUrl = dbUrl;
-		this.dbUser = dbUser;
-		this.dbPassword = dbPassword;
+		this.exportDir = System.getenv().getOrDefault("EXPORT_DIR", "/mnt/backups");
+		this.dbUrl = System.getenv().getOrDefault("SQLSERVER_URL",
+				"jdbc:sqlserver://sqlserver:1433;databaseName=eventflow;encrypt=false");
+		this.dbUser = System.getenv().getOrDefault("SQLSERVER_USER", "sa");
+		this.dbPassword = System.getenv().getOrDefault("SQLSERVER_PASSWORD", "EventFlow123!");
 
 		new File(exportDir).mkdirs();
 		System.out.println("[BACKUP] Servicio inicializado. Directorio de exportacion: " + exportDir);
@@ -42,9 +41,8 @@ public class BackupService {
 
 	public String requestBackup(String description) {
 		String backupId = "bk_" + UUID.randomUUID().toString().substring(0, 8);
-		Instant requestedAt = Instant.now();
 
-		eventBus.publish("backup.requested", new BackupRequestedEvent(backupId, description, requestedAt));
+		eventBus.publish("backup.requested", new BackupRequestedEvent(backupId, description));
 
 		return backupId;
 	}
@@ -63,16 +61,16 @@ public class BackupService {
 				long duration = System.currentTimeMillis() - startTime;
 				long fileSize = new File(exportFile).length();
 				eventBus.publish("backup.completed",
-						new BackupCompletedEvent(backupId, snapshotId, fileSize, duration, Instant.now()));
+						new BackupCompletedEvent(backupId, snapshotId, fileSize, duration));
 				System.out.println("[BACKUP] Completado en " + duration + "ms. Snapshot: " + snapshotId);
 			} else {
 				eventBus.publish("backup.failed",
-						new BackupFailedEvent(backupId, "Restic backup retorno null", Instant.now()));
+						new BackupFailedEvent(backupId, "Restic backup retorno null"));
 			}
 
 		} catch (Exception e) {
 			eventBus.publish("backup.failed",
-					new BackupFailedEvent(backupId, "Error al exportar: " + e.getMessage(), Instant.now()));
+					new BackupFailedEvent(backupId, "Error al exportar: " + e.getMessage()));
 		}
 	}
 
@@ -104,11 +102,11 @@ public class BackupService {
 		return count;
 	}
 
-	private String requestRestore(String snapshotId) {
+	public String requestRestore(String snapshotId) {
 		String restoreId = "rs_" + UUID.randomUUID().toString().substring(0, 8);
 
 		eventBus.publish("restore.requested",
-				new RestoreRequestedEvent(restoreId, snapshotId, Instant.now()));
+				new RestoreRequestedEvent(restoreId, snapshotId));
 
 		return restoreId;
 	}
@@ -124,18 +122,18 @@ public class BackupService {
 				File dir = new File(restoreDir);
 				int fileCount = countFiles(dir);
 				eventBus.publish("restore.completed",
-						new RestoreCompletedEvent(restoreId, snapshotId, fileCount, duration, Instant.now()));
+						new RestoreCompletedEvent(restoreId, snapshotId, fileCount, duration));
 				System.out
 						.println("[BACKUP] Restauracion completada: " + fileCount + " archivos en " + duration + "ms");
 			} else {
 				eventBus.publish("restore.failed",
-						new RestoreFailedEvent(restoreId, "Restic restore fallo", Instant.now()));
+						new RestoreFailedEvent(restoreId, "Restic restore fallo"));
 				System.out.println("[BACKUP] Restauracion fallida");
 			}
 
 		} catch (Exception e) {
 			eventBus.publish("restore.failed",
-					new RestoreFailedEvent(restoreId, "Error al restaurar: " + e.getMessage(), Instant.now()));
+					new RestoreFailedEvent(restoreId, "Error al restaurar: " + e.getMessage()));
 		}
 	}
 
@@ -172,5 +170,11 @@ public class BackupService {
 				count += countFiles(f);
 		}
 		return count;
+	}
+
+	private String escapeJson(String value) {
+		if (value == null)
+			return "";
+		return value.replace("\\", "\\\\").replace("\"", "\\\"");
 	}
 }
