@@ -25,6 +25,35 @@ content-type: application/json
 
 ###
 
+POST {{baseUrl}}
+content-type: application/json
+
+{
+	"customer_id": "customer-456",
+	"items": [
+		{
+			"product_id": "teclado-gamer-xyz",
+			"product_name": "Teclado Gamer XYZ",
+			"price": 49.99,
+			"quantity": 1
+		},
+		{
+			"product_id": "mouse-inalambrico-abc",
+			"product_name": "Mouse Inalámbrico ABC",
+			"price": 29.99,
+			"quantity": 1
+		},
+		{
+			"product_id": "monitor-4k-123",
+			"product_name": "Monitor 4K 123",
+			"price": 399.99,
+			"quantity": 2
+		}
+	]
+}
+
+###
+
 GET {{baseUrl}}
 content-type: application/json
 
