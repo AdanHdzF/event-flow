@@ -3,8 +3,9 @@ package com.edacourse.api.shared.config;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import com.edacourse.api.backup.application.BackupService;
-import com.edacourse.api.backup.application.DataSeeder;
+import com.edacourse.api.backup.domain.port.ProductSeeder;
 import com.edacourse.api.catalog.application.service.CatalogService;
+import com.edacourse.api.filestream.application.service.FileStreamService;
 import com.edacourse.api.notification.application.service.NotificationService;
 import com.edacourse.api.notification.domain.repository.NotificationRepository;
 import com.edacourse.api.notification.infrastructure.persistence.InMemoryNotificationRepository;
@@ -29,10 +30,13 @@ public class AppBinder extends AbstractBinder {
 	private final HmacSigner hmacSigner;
 	private final EventSseBroadcaster sseBroadcaster;
 	private final BackupService backupService;
+	private final ProductSeeder productSeeder;
+	private final FileStreamService fileStreamService;
 
 	public AppBinder(EventSerializer serializer, EventBus eventBus, OrderSseResource sseResource,
 			CatalogService catalogService, SearchService searchService, HmacSigner hmacSigner,
-			EventSseBroadcaster sseBroadcaster, BackupService backupService) {
+			EventSseBroadcaster sseBroadcaster, BackupService backupService, ProductSeeder productSeeder,
+			FileStreamService fileStreamService) {
 		this.serializer = serializer;
 		this.eventBus = eventBus;
 		this.sseResource = sseResource;
@@ -41,6 +45,8 @@ public class AppBinder extends AbstractBinder {
 		this.hmacSigner = hmacSigner;
 		this.sseBroadcaster = sseBroadcaster;
 		this.backupService = backupService;
+		this.productSeeder = productSeeder;
+		this.fileStreamService = fileStreamService;
 	}
 
 	@Override
@@ -62,6 +68,8 @@ public class AppBinder extends AbstractBinder {
 		bind(sseBroadcaster).to(EventSseBroadcaster.class);
 
 		bind(backupService).to(BackupService.class).in(Singleton.class);
-		bind(DataSeeder.class).to(DataSeeder.class).in(Singleton.class);
+
+		bind(productSeeder).to(ProductSeeder.class);
+		bind(fileStreamService).to(FileStreamService.class);
 	}
 }

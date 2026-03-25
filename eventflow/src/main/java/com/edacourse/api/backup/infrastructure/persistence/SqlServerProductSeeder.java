@@ -1,4 +1,4 @@
-package com.edacourse.api.backup.application;
+package com.edacourse.api.backup.infrastructure.persistence;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -6,12 +6,9 @@ import java.sql.PreparedStatement;
 import java.util.Random;
 import java.util.UUID;
 
-/**
- * Genera datos falsos de productos para poblar SQL Server.
- * Permite crear bases de datos grandes para probar backups con Restic.
- */
-public class DataSeeder {
+import com.edacourse.api.backup.domain.port.ProductSeeder;
 
+public class SqlServerProductSeeder implements ProductSeeder {
 	private final String dbUrl;
 	private final String dbUser;
 	private final String dbPassword;
@@ -33,13 +30,13 @@ public class DataSeeder {
 			"Componentes", "Accesorios", "Muebles", "Gaming", "Oficina"
 	};
 
-	public DataSeeder() {
-		this.dbUrl = System.getenv().getOrDefault("SQLSERVER_URL",
-				"jdbc:sqlserver://sqlserver:1433;databaseName=eventflow;encrypt=false");
-		this.dbUser = System.getenv().getOrDefault("SQLSERVER_USER", "sa");
-		this.dbPassword = System.getenv().getOrDefault("SQLSERVER_PASSWORD", "EventFlow123!");
+	public SqlServerProductSeeder(String dbUrl, String dbUser, String dbPassword) {
+		this.dbUrl = dbUrl;
+		this.dbUser = dbUser;
+		this.dbPassword = dbPassword;
 	}
 
+	@Override
 	public SeedResult seed(int count) {
 		long startTime = System.currentTimeMillis();
 		int inserted = 0;
@@ -99,8 +96,5 @@ public class DataSeeder {
 		String product = PRODUCTS[random.nextInt(PRODUCTS.length)];
 		String adjective = ADJECTIVES[random.nextInt(ADJECTIVES.length)];
 		return product + " " + adjective;
-	}
-
-	public record SeedResult(int inserted, long elapsedMs) {
 	}
 }

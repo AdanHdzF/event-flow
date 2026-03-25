@@ -7,11 +7,9 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
 
-import com.edacourse.api.filestream.domain.event.FileUploadStartedEvent;
 import com.edacourse.api.filestream.domain.model.FileChunk;
 import com.edacourse.api.filestream.infrastructure.kafka.FileChunkProducer;
 import com.edacourse.api.shared.infrastructure.messaging.EventBus;
@@ -41,8 +39,9 @@ public class FileStreamService {
 				"[FILE-STREAM] Dividiendo " + fileName + " (" + totalBytes + " bytes) en " + totalParts + " chunks");
 
 		// Publicar evento de inicio
-		eventBus.publish("file.upload.started",
-				new FileUploadStartedEvent(fileId, fileName, totalParts, totalBytes, Instant.now()));
+		// eventBus.publish("file.upload.started",
+		// new FileUploadStartedEvent(fileId, fileName, totalParts, totalBytes,
+		// Instant.now()));
 
 		for (int i = 0; i < totalParts; i++) {
 			int start = i * chunkSizeBytes;
@@ -52,10 +51,11 @@ public class FileStreamService {
 			String checksum = computeChecksum(chunkData);
 
 			FileChunk chunk = new FileChunk(fileId, fileName, i + 1, totalParts, chunkData, checksum);
+			System.out.println("[FILE-STREAM] Enviando chunk " + (i + 1) + "/" + totalParts + " de " + fileName);
 			chunkProducer.sendChunk(chunk);
 		}
 
-		return fileName;
+		return fileId;
 	}
 
 	public String generateTestCsv(int productCount, String outputDir) throws IOException {

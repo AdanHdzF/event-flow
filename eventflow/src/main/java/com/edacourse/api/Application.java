@@ -9,7 +9,10 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.edacourse.api.backup.application.BackupService;
-import com.edacourse.api.backup.application.DataSeeder;
+import com.edacourse.api.backup.domain.port.ProductExporter;
+import com.edacourse.api.backup.domain.port.ProductSeeder;
+import com.edacourse.api.backup.infrastructure.persistence.SqlServerProductExporter;
+import com.edacourse.api.backup.infrastructure.persistence.SqlServerProductSeeder;
 import com.edacourse.api.backup.infrastructure.restic.ResticClient;
 import com.edacourse.api.backup.infrastructure.subscriber.BackupSubscriber;
 import com.edacourse.api.backup.interfaces.BackupResource;
@@ -19,6 +22,10 @@ import com.edacourse.api.catalog.infrastructure.cdc.CdcStrategy;
 import com.edacourse.api.catalog.infrastructure.cdc.CdcStrategyFactory;
 import com.edacourse.api.catalog.infrastructure.persistence.SqlServerProductRepository;
 import com.edacourse.api.catalog.interfaces.rest.CatalogResource;
+import com.edacourse.api.filestream.application.service.FileStreamService;
+import com.edacourse.api.filestream.infrastructure.kafka.FileChunkConsumer;
+import com.edacourse.api.filestream.infrastructure.kafka.FileChunkProducer;
+import com.edacourse.api.filestream.interfaces.rest.FileStreamResource;
 import com.edacourse.api.inventory.application.service.InventoryService;
 import com.edacourse.api.inventory.domain.repository.InventoryRepository;
 import com.edacourse.api.inventory.infrastructure.persistence.InMemoryInventoryRepository;
@@ -126,8 +133,23 @@ public class Application {
 		String resticPassword = System.getenv().getOrDefault("RESTIC_PASSWORD", "EventFlow123!");
 		ResticClient resticClient = new ResticClient(resticRepository, resticPassword);
 
-		BackupService backupService = new BackupService(eventBus, resticClient);
+		String dbUrl = System.getenv().getOrDefault("SQLSERVER_URL",
+				"jdbc:sqlserver://sqlserver:1433;databaseName=eventflow;encrypt=false");
+		String dbUser = System.getenv().getOrDefault("SQLSERVER_USER", "sa");
+		String dbPassword = System.getenv().getOrDefault("SQLSERVER_PASSWORD", "EventFlow123!");
+
+		ProductExporter productExporter = new SqlServerProductExporter(dbUrl, dbUser, dbPassword);
+		ProductSeeder productSeeder = new SqlServerProductSeeder(dbUrl, dbUser, dbPassword);
+
+		BackupService backupService = new BackupService(eventBus, resticClient, productExporter);
 		new BackupSubscriber(eventBus, backupService);
+
+		// FileStream context
+		int chunkSize = Integer.parseInt(System.getenv().getOrDefault("CHUNK_SIZE_BYTES", "524288"));
+		FileChunkProducer chunkProducer = new FileChunkProducer("file.chunks");
+		FileStreamService fileStreamService = new FileStreamService(eventBus, chunkProducer, chunkSize);
+
+		new FileChunkConsumer(eventBus, "file.chunks", "file-import-group");
 
 		// DLQ handler (if broker supports it)
 		if (eventBus instanceof DeadLetterHandler dlh) {
@@ -140,11 +162,10 @@ public class Application {
 		// Jersey HTTP server
 		ResourceConfig config = new ResourceConfig()
 				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService, hmacSigner,
-						sseBroadcaster, backupService))
+						sseBroadcaster, backupService, productSeeder, fileStreamService))
 				.register(JacksonFeature.class)
 				.register(MultiPartFeature.class)
 				.register(ObjectMapperProvider.class)
-				.register(DataSeeder.class)
 				.register(OrderResource.class)
 				.register(CatalogResource.class)
 				.register(SearchResource.class)
@@ -152,7 +173,8 @@ public class Application {
 				.register(WebhookResource.class)
 				.register(StaticFileResource.class)
 				.register(EventSseResource.class)
-				.register(BackupResource.class);
+				.register(BackupResource.class)
+				.register(FileStreamResource.class);
 
 		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);
 
