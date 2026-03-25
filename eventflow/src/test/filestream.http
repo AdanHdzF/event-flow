@@ -1,0 +1,9 @@
+@baseUrl = http://localhost:8090/api/files
+
+
+POST {{baseUrl}}/import?count=100
+content-type: application/json
+
+
+
+

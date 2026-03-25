@@ -21,15 +21,18 @@ services:
       - RESTIC_REPOSITORY=rest:http://restic-server:8000/
       - RESTIC_PASSWORD=EventFlow123!
       - EXPORT_DIR=/data/exports
+      - CHUNK_SIZE_BYTES=524288
     depends_on:
-      # kafka:
-      #   condition: service_healthy
+      kafka:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       sqlserver-init:
         condition: service_completed_successfully
       opensearch:
         condition: service_healthy
+    volumes:
+      - ./data:/data
 
   frontend:
     image: eventflow-frontend
@@ -69,36 +72,39 @@ services:
         "-C",
       ]
 
-  # kafka:
-  #   image: apache/kafka:3.9.0
-  #   container_name: eventflow-kafka
-  #   environment:
-  #     # KRaft mode (no Zookeeper)
-  #     KAFKA_NODE_ID: 1
-  #     KAFKA_PROCESS_ROLES: broker,controller
-  #     KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
-  #     KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: eventflow-kafka
+    environment:
+      # KRaft mode (no Zookeeper)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
 
-  #     # Listeners
-  #     KAFKA_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:29093
-  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # Listeners
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
-  #     # Cluster
-  #     CLUSTER_ID: "eventflow-kafka-cluster-001"
-  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  #     KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-  #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Cluster
+      CLUSTER_ID: "eventflow-kafka-cluster-001"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
 
-  #     # Log retention
-  #     KAFKA_LOG_RETENTION_HOURS: 168
-  #     KAFKA_LOG_SEGMENT_BYTES: 1073741824
-  #   healthcheck:
-  #     test: /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+      # Log retention
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+
+      KAFKA_MESSAGE_MAX_BYTES: 2097152
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 2097152
+    healthcheck:
+      test: /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:4.1-management
