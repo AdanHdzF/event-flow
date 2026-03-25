@@ -1,0 +1,48 @@
+#@baseUrl = https://9x1n96dg-8090.usw3.devtunnels.ms/api/notifications
+@baseUrl = http://localhost:8090/api/backups
+
+
+POST {{baseUrl}}/seed?count=400
+content-type: application/json
+
+
+
+###
+
+POST {{baseUrl}}/request
+content-type: application/json
+
+{
+  "description": "Backup-test-2"
+}
+
+###
+
+GET {{baseUrl}}/snapshots
+content-type: application/json
+
+
+###
+
+POST {{baseUrl}}/restore
+content-type: application/json
+
+{
+	"snapshotId": "588a01e7e409421feaec7c86274b1df823526fa2b97cda133267b1d99ff2e679"
+}
+
+
+
+###
+
+POST {{baseUrl}}/upload
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="file"; filename="test.pdf"
+Content-Type: application/pdf
+
+< ./files/test.pdf
+--MyBoundary--
+
+###
