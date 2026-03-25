@@ -44,7 +44,8 @@ public class FileChunkProducer {
 						String.valueOf(chunk.partNumber()).getBytes(StandardCharsets.UTF_8)))
 				.add(new RecordHeader("totalParts",
 						String.valueOf(chunk.totalParts()).getBytes(StandardCharsets.UTF_8)))
-				.add(new RecordHeader("checksum", chunk.checksum().getBytes(StandardCharsets.UTF_8)));
+				.add(new RecordHeader("checksum", chunk.checksum().getBytes(StandardCharsets.UTF_8)))
+				.add(new RecordHeader("extension", chunk.extension().getBytes(StandardCharsets.UTF_8)));
 
 		producer.send(record, (metadata, exception) -> {
 			if (exception != null) {
