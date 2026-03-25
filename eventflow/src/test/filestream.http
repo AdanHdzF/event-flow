@@ -6,4 +6,32 @@ content-type: application/json
 
 
 
+###
+
+POST {{baseUrl}}/import-file
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="file"; filename="test-jpg.jpg"
+Content-Type: image/jpeg
+
+< ./files/test-jpg.jpg
+--MyBoundary--
+
+
+
+###
+
+POST {{baseUrl}}/import-file
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="file"; filename="test-webp.webp"
+Content-Type: image/webp
+
+< ./files/test-webp.webp
+--MyBoundary--
+
+
+
 
