@@ -5,6 +5,7 @@ import java.net.URI;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.edacourse.api.backup.application.BackupService;
@@ -141,6 +142,7 @@ public class Application {
 				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService, hmacSigner,
 						sseBroadcaster, backupService))
 				.register(JacksonFeature.class)
+				.register(MultiPartFeature.class)
 				.register(ObjectMapperProvider.class)
 				.register(DataSeeder.class)
 				.register(OrderResource.class)

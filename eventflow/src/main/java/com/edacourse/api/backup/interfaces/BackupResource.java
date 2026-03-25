@@ -1,5 +1,14 @@
 package com.edacourse.api.backup.interfaces;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+
 import com.edacourse.api.backup.application.BackupService;
 import com.edacourse.api.backup.application.DataSeeder;
 import com.edacourse.api.backup.application.DataSeeder.SeedResult;
@@ -56,6 +65,34 @@ public class BackupResource {
 	public Response getStats() {
 		String stats = backupService.getStats();
 		return Response.ok(stats).build();
+	}
+
+	@POST
+	@Path("/upload")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response uploadFile(
+			@FormDataParam("file") InputStream fileInputStream,
+			@FormDataParam("file") FormDataContentDisposition fileDetail) {
+
+		if (fileInputStream == null || fileDetail == null || fileDetail.getFileName() == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new BackupResponseDTO("", "No file provided")).build();
+		}
+
+		String fileName = fileDetail.getFileName();
+		String uploadDir = backupService.getExportDir() + "/uploads";
+		new File(uploadDir).mkdirs();
+		String filePath = uploadDir + "/" + fileName;
+
+		try {
+			Files.copy(fileInputStream, new File(filePath).toPath(), StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			return Response.serverError()
+					.entity(new BackupResponseDTO("", "Failed to save file: " + e.getMessage())).build();
+		}
+
+		String backupId = backupService.requestFileBackup(fileName, filePath);
+		return Response.ok(new BackupResponseDTO(backupId, "File backup requested for: " + fileName)).build();
 	}
 
 	@POST
