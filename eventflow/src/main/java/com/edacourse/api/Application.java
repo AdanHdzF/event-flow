@@ -22,6 +22,10 @@ import com.edacourse.api.catalog.infrastructure.cdc.CdcStrategy;
 import com.edacourse.api.catalog.infrastructure.cdc.CdcStrategyFactory;
 import com.edacourse.api.catalog.infrastructure.persistence.SqlServerProductRepository;
 import com.edacourse.api.catalog.interfaces.rest.CatalogResource;
+import com.edacourse.api.cqrs.application.service.OrderQueryService;
+import com.edacourse.api.cqrs.infrastructure.persistence.OrderReadModelRepository;
+import com.edacourse.api.cqrs.infrastructure.projection.OrderProjection;
+import com.edacourse.api.cqrs.interfaces.rest.CqrsResource;
 import com.edacourse.api.filestream.application.service.FileStreamService;
 import com.edacourse.api.filestream.infrastructure.kafka.FileChunkConsumer;
 import com.edacourse.api.filestream.infrastructure.kafka.FileChunkProducer;
@@ -151,6 +155,13 @@ public class Application {
 
 		new FileChunkConsumer(eventBus, "file.chunks", "file-import-group");
 
+		// CQRS read model
+		OrderReadModelRepository orderQueryRepository = new OrderReadModelRepository();
+		OrderQueryService queryService = new OrderQueryService(orderQueryRepository);
+
+		// CQRS projection
+		new OrderProjection(eventBus, orderQueryRepository);
+
 		// DLQ handler (if broker supports it)
 		if (eventBus instanceof DeadLetterHandler dlh) {
 			dlh.onDeadLetter("orders.created", String.class,
@@ -162,7 +173,7 @@ public class Application {
 		// Jersey HTTP server
 		ResourceConfig config = new ResourceConfig()
 				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService, hmacSigner,
-						sseBroadcaster, backupService, productSeeder, fileStreamService))
+						sseBroadcaster, backupService, productSeeder, fileStreamService, queryService))
 				.register(JacksonFeature.class)
 				.register(MultiPartFeature.class)
 				.register(ObjectMapperProvider.class)
@@ -174,7 +185,8 @@ public class Application {
 				.register(StaticFileResource.class)
 				.register(EventSseResource.class)
 				.register(BackupResource.class)
-				.register(FileStreamResource.class);
+				.register(FileStreamResource.class)
+				.register(CqrsResource.class);
 
 		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);
 
