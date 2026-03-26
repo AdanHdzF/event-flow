@@ -6,6 +6,7 @@ import com.edacourse.api.backup.application.BackupService;
 import com.edacourse.api.backup.domain.port.ProductSeeder;
 import com.edacourse.api.catalog.application.service.CatalogService;
 import com.edacourse.api.cqrs.application.service.OrderQueryService;
+import com.edacourse.api.eventsourcing.application.service.EventSourcingService;
 import com.edacourse.api.filestream.application.service.FileStreamService;
 import com.edacourse.api.notification.application.service.NotificationService;
 import com.edacourse.api.notification.domain.repository.NotificationRepository;
@@ -34,11 +35,13 @@ public class AppBinder extends AbstractBinder {
 	private final ProductSeeder productSeeder;
 	private final FileStreamService fileStreamService;
 	private final OrderQueryService queryService;
+	private final EventSourcingService eventSourcingService;
 
 	public AppBinder(EventSerializer serializer, EventBus eventBus, OrderSseResource sseResource,
 			CatalogService catalogService, SearchService searchService, HmacSigner hmacSigner,
 			EventSseBroadcaster sseBroadcaster, BackupService backupService, ProductSeeder productSeeder,
-			FileStreamService fileStreamService, OrderQueryService queryService) {
+			FileStreamService fileStreamService, OrderQueryService queryService,
+			EventSourcingService eventSourcingService) {
 		this.serializer = serializer;
 		this.eventBus = eventBus;
 		this.sseResource = sseResource;
@@ -50,6 +53,7 @@ public class AppBinder extends AbstractBinder {
 		this.productSeeder = productSeeder;
 		this.fileStreamService = fileStreamService;
 		this.queryService = queryService;
+		this.eventSourcingService = eventSourcingService;
 	}
 
 	@Override
@@ -76,5 +80,6 @@ public class AppBinder extends AbstractBinder {
 		bind(fileStreamService).to(FileStreamService.class);
 
 		bind(queryService).to(OrderQueryService.class);
+		bind(eventSourcingService).to(EventSourcingService.class);
 	}
 }

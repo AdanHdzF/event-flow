@@ -26,6 +26,9 @@ import com.edacourse.api.cqrs.application.service.OrderQueryService;
 import com.edacourse.api.cqrs.infrastructure.persistence.OrderReadModelRepository;
 import com.edacourse.api.cqrs.infrastructure.projection.OrderProjection;
 import com.edacourse.api.cqrs.interfaces.rest.CqrsResource;
+import com.edacourse.api.eventsourcing.application.service.EventSourcingService;
+import com.edacourse.api.eventsourcing.infrastructure.persistence.SqlServerEventStore;
+import com.edacourse.api.eventsourcing.infrastructure.subscriber.EventStoreSubscriber;
 import com.edacourse.api.filestream.application.service.FileStreamService;
 import com.edacourse.api.filestream.infrastructure.kafka.FileChunkConsumer;
 import com.edacourse.api.filestream.infrastructure.kafka.FileChunkProducer;
@@ -162,6 +165,14 @@ public class Application {
 		// CQRS projection
 		new OrderProjection(eventBus, orderQueryRepository);
 
+		// Event Sourcing
+		SqlServerEventStore eventStore = new SqlServerEventStore();
+		EventSourcingService eventSourcingService = new EventSourcingService(eventStore);
+
+		// Event Sourcing subscriber
+		new EventStoreSubscriber(eventBus,
+				new com.edacourse.api.shared.infrastructure.serialization.JsonEventSerializer(), eventStore);
+
 		// DLQ handler (if broker supports it)
 		if (eventBus instanceof DeadLetterHandler dlh) {
 			dlh.onDeadLetter("orders.created", String.class,
@@ -173,7 +184,8 @@ public class Application {
 		// Jersey HTTP server
 		ResourceConfig config = new ResourceConfig()
 				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService, hmacSigner,
-						sseBroadcaster, backupService, productSeeder, fileStreamService, queryService))
+						sseBroadcaster, backupService, productSeeder, fileStreamService, queryService,
+						eventSourcingService))
 				.register(JacksonFeature.class)
 				.register(MultiPartFeature.class)
 				.register(ObjectMapperProvider.class)
