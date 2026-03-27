@@ -43,6 +43,10 @@ import com.edacourse.api.notification.infrastructure.persistence.InMemoryNotific
 import com.edacourse.api.notification.infrastructure.subscriber.NotificationSubscriber;
 import com.edacourse.api.notification.interfaces.rest.NotificationResource;
 import com.edacourse.api.notification.interfaces.rest.WebhookResource;
+import com.edacourse.api.observability.application.service.ObservabilityService;
+import com.edacourse.api.observability.domain.model.EventMetrics;
+import com.edacourse.api.observability.infrastructure.subscriber.MetricsCollectorSubscriber;
+import com.edacourse.api.observability.interfaces.rest.ObservabilityResource;
 import com.edacourse.api.order.interfaces.rest.OrderResource;
 import com.edacourse.api.order.interfaces.sse.OrderSseResource;
 import com.edacourse.api.order.interfaces.sse.SseBridgeSubscriber;
@@ -179,6 +183,11 @@ public class Application {
 		SagaStateRepository sagaStateRepository = new SagaStateRepository();
 		CheckoutSagaOrchestrator sagaOrchestrator = new CheckoutSagaOrchestrator(eventBus, sagaStateRepository);
 
+		// Observability context
+		EventMetrics metrics = new EventMetrics();
+		MetricsCollectorSubscriber metricsCollectorSubscriber = new MetricsCollectorSubscriber(eventBus, metrics);
+		ObservabilityService observabilityService = new ObservabilityService(metricsCollectorSubscriber);
+
 		// DLQ handler (if broker supports it)
 		if (eventBus instanceof DeadLetterHandler dlh) {
 			dlh.onDeadLetter("orders.created", String.class,
@@ -191,7 +200,7 @@ public class Application {
 		ResourceConfig config = new ResourceConfig()
 				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService, hmacSigner,
 						sseBroadcaster, backupService, productSeeder, fileStreamService, queryService,
-						eventSourcingService, sagaOrchestrator))
+						eventSourcingService, sagaOrchestrator, observabilityService))
 				.register(JacksonFeature.class)
 				.register(MultiPartFeature.class)
 				.register(ObjectMapperProvider.class)
@@ -204,6 +213,7 @@ public class Application {
 				.register(EventSseResource.class)
 				.register(BackupResource.class)
 				.register(FileStreamResource.class)
+				.register(ObservabilityResource.class)
 				.register(CqrsResource.class);
 
 		HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);

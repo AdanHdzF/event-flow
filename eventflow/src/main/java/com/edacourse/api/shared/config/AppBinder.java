@@ -11,6 +11,7 @@ import com.edacourse.api.filestream.application.service.FileStreamService;
 import com.edacourse.api.notification.application.service.NotificationService;
 import com.edacourse.api.notification.domain.repository.NotificationRepository;
 import com.edacourse.api.notification.infrastructure.persistence.InMemoryNotificationRepository;
+import com.edacourse.api.observability.application.service.ObservabilityService;
 import com.edacourse.api.order.application.service.OrderService;
 import com.edacourse.api.order.domain.repository.OrderRepository;
 import com.edacourse.api.order.infrastructure.persistence.InMemoryOrderRepository;
@@ -38,12 +39,14 @@ public class AppBinder extends AbstractBinder {
 	private final OrderQueryService queryService;
 	private final EventSourcingService eventSourcingService;
 	private final CheckoutSagaOrchestrator sagaOrchestrator;
+	private final ObservabilityService observabilityService;
 
 	public AppBinder(EventSerializer serializer, EventBus eventBus, OrderSseResource sseResource,
 			CatalogService catalogService, SearchService searchService, HmacSigner hmacSigner,
 			EventSseBroadcaster sseBroadcaster, BackupService backupService, ProductSeeder productSeeder,
 			FileStreamService fileStreamService, OrderQueryService queryService,
-			EventSourcingService eventSourcingService, CheckoutSagaOrchestrator sagaOrchestrator) {
+			EventSourcingService eventSourcingService, CheckoutSagaOrchestrator sagaOrchestrator,
+			ObservabilityService observabilityService) {
 		this.serializer = serializer;
 		this.eventBus = eventBus;
 		this.sseResource = sseResource;
@@ -57,6 +60,7 @@ public class AppBinder extends AbstractBinder {
 		this.queryService = queryService;
 		this.eventSourcingService = eventSourcingService;
 		this.sagaOrchestrator = sagaOrchestrator;
+		this.observabilityService = observabilityService;
 	}
 
 	@Override
@@ -85,5 +89,6 @@ public class AppBinder extends AbstractBinder {
 		bind(queryService).to(OrderQueryService.class);
 		bind(eventSourcingService).to(EventSourcingService.class);
 		bind(sagaOrchestrator).to(CheckoutSagaOrchestrator.class);
+		bind(observabilityService).to(ObservabilityService.class);
 	}
 }
