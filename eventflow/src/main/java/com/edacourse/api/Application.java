@@ -50,6 +50,8 @@ import com.edacourse.api.payment.application.service.PaymentService;
 import com.edacourse.api.payment.domain.repository.PaymentRepository;
 import com.edacourse.api.payment.infrastructure.persistence.InMemoryPaymentRepository;
 import com.edacourse.api.payment.infrastructure.subscriber.PaymentSubscriber;
+import com.edacourse.api.saga.application.service.CheckoutSagaOrchestrator;
+import com.edacourse.api.saga.infrastructure.persistence.SagaStateRepository;
 import com.edacourse.api.search.application.service.SearchService;
 import com.edacourse.api.search.domain.repository.ProductSearchRepository;
 import com.edacourse.api.search.infrastructure.opensearch.EmbeddingGenerator;
@@ -173,6 +175,10 @@ public class Application {
 		new EventStoreSubscriber(eventBus,
 				new com.edacourse.api.shared.infrastructure.serialization.JsonEventSerializer(), eventStore);
 
+		// Saga context
+		SagaStateRepository sagaStateRepository = new SagaStateRepository();
+		CheckoutSagaOrchestrator sagaOrchestrator = new CheckoutSagaOrchestrator(eventBus, sagaStateRepository);
+
 		// DLQ handler (if broker supports it)
 		if (eventBus instanceof DeadLetterHandler dlh) {
 			dlh.onDeadLetter("orders.created", String.class,
@@ -185,7 +191,7 @@ public class Application {
 		ResourceConfig config = new ResourceConfig()
 				.register(new AppBinder(serializer, eventBus, sseResource, catalogService, searchService, hmacSigner,
 						sseBroadcaster, backupService, productSeeder, fileStreamService, queryService,
-						eventSourcingService))
+						eventSourcingService, sagaOrchestrator))
 				.register(JacksonFeature.class)
 				.register(MultiPartFeature.class)
 				.register(ObjectMapperProvider.class)
